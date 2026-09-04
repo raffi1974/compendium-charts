@@ -1,0 +1,13 @@
+# Python bytecode, written whenever a script in .claude/skills/ runs
+__pycache__/
+*.py[cod]
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Excel lock files, created while a workbook is open
+~$*.xlsx
+~$*.xls
+
+# Timestamped dictionary backups written by update_dictionary()
+translation dict backup *.xlsx
