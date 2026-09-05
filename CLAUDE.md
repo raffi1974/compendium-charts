@@ -19,12 +19,35 @@ Paths live outside this repo, under
 
 ## Filling dictionary gaps — do this without being asked
 
-Notebooks 2 and 3 end by listing values the dictionary could not translate.
-**When the user asks to run the pipeline, treat closing those gaps as part of
-the job**, not as a separate request to come back for:
+**When the user asks to run the pipeline, treat closing dictionary gaps as part
+of the job**, not as a separate request to come back for. There are two kinds,
+and both must be closed before the run counts as finished.
+
+### Kind 1 — a value the questionnaires used
+
+A country writes a survey name the dictionary has not seen. Notebooks 2 and 3
+find these by comparing a table before and after translation: a value with no
+entry passes through unchanged, and that is the gap. The blank column is
+`val_en` in notebook 2, `val_ar` in notebook 3.
+
+### Kind 2 — a label the pipeline invented
+
+The calculations create indicator titles and age-group labels (`Sex ratio,
+2010-2025 (per 100 females)`, `<15 years`, …) that appear in **no
+questionnaire**, so no before/after comparison can ever surface them. Notebook 2
+checks for these separately, in `check_calculated_labels()`, and its calculation
+cell reports any the dictionary does not know. `export_calculated_labels()`
+writes them out with `val_ar` blank.
+
+Without this they come out in English from notebook 3 and nothing flags it. Any
+new calculation added later is caught automatically, because the check is
+derived from the same constants the calculations use.
+
+### The loop, either kind
 
 1. Run the notebook.
-2. If it reports untranslated values, call `export_untranslated(REPORTS)`.
+2. Call `export_untranslated(REPORTS)` for kind 1, `export_calculated_labels()`
+   for kind 2.
 3. Translate them yourself. Use the official English name of a statistical body
    where one exists — search `translation dict.xlsx` first, so wording stays
    consistent with what is already there.
