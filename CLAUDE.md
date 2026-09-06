@@ -8,11 +8,16 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 | 2 | `Compendium_2_Translation.ipynb` | both `merged longfiles_*` | `<Chapter>_EN.xlsx` (merged + calculated) |
 | 3 | `Compendium_3_Back_Translation.ipynb` | `<Chapter>_EN.xlsx` | `<Chapter>_AR.xlsx` |
 | 4 | `Compendium_4_Tabulations.ipynb` | both final files | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
-| — | `Compendium_Data_Quality.ipynb` | questionnaires + final files | `data_quality_report.xlsx` |
 
 Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation is
-last so it picks up the calculated indicators. The data-quality notebook can run
-any time (Part A before step 1, Part B after step 2).
+last so it picks up the calculated indicators.
+
+**Checking the data is a separate project**, `../compendium data quality/`, with
+its own `CLAUDE.md`. It holds `Compendium_Data_Quality.ipynb` (structural checks
+on the questionnaires, contradiction checks on the final files) and
+`Compendium_Data_Gaps.ipynb` (completeness, and the dashboard in its `docs/`).
+Nothing there changes data — it only measures and reports. Run it after step 2,
+before building tabulations on figures that have not been sanity-checked.
 
 Paths live outside this repo, under
 `C:\Users\RSHIRINI\OneDrive - United Nations\Desktop\DSS\`.
@@ -99,7 +104,7 @@ rows before writing.
 
 - **Two Population indicators labelled "(%)" hold absolute head-counts** for
   eight countries each, with values up to 29,258,382. This accounts for 97% of
-  the data-quality report's implausible-value findings. Needs fixing at source.
+  the data-gaps report's implausible-value findings. Needs fixing at source.
 - **25 country-years where a reported total contradicts the sum of its own age
   bands**, some by three orders of magnitude. The sex-ratio calculation logs
   these rather than silently using them.
