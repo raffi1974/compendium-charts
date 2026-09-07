@@ -5,12 +5,20 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
 | 1 | `Compendium_1_Long_Files.ipynb` | `DATA COLLECTOR\datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `merged longfiles_<LANG>\<Chapter>_<LANG>.xlsx` |
-| 2 | `Compendium_2_Translation.ipynb` | both `merged longfiles_*` | `<Chapter>_EN.xlsx` (merged + calculated) |
-| 3 | `Compendium_3_Back_Translation.ipynb` | `<Chapter>_EN.xlsx` | `<Chapter>_AR.xlsx` |
+| 2 | `Compendium_2_Translation.ipynb` | both `merged longfiles_*` | `<Chapter>_EN.xlsx` |
+| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx` + `merged longfiles_AR\` | calculated rows added to `<Chapter>_EN.xlsx`; `<Chapter>_AR.xlsx` |
 | 4 | `Compendium_4_Tabulations.ipynb` | both final files | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
 
 Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation is
 last so it picks up the calculated indicators.
+
+**Notebook 3 translates only the rows it creates.** It used to back-translate
+the whole English file into Arabic, which meant pushing hundreds of thousands of
+rows through an inverted dictionary — lossy exactly where several Arabic
+spellings share one English translation (43 terms on the current data). There is
+no need: the Arabic long file from notebook 1 is the *original*, straight from
+the questionnaires. Only the calculated rows are missing from it, so only those
+are translated. Never reintroduce a whole-file back-translation.
 
 **Checking the data is a separate project**, `../compendium data quality/`, with
 its own `CLAUDE.md`. It holds `Compendium_Data_Quality.ipynb` (structural checks
@@ -39,10 +47,9 @@ entry passes through unchanged, and that is the gap. The blank column is
 
 The calculations create indicator titles and age-group labels (`Sex ratio,
 2010-2025 (per 100 females)`, `<15 years`, …) that appear in **no
-questionnaire**, so no before/after comparison can ever surface them. Notebook 2
-checks for these separately, in `check_calculated_labels()`, and its calculation
-cell reports any the dictionary does not know. `export_calculated_labels()`
-writes them out with `val_ar` blank.
+questionnaire**, so no before/after comparison can ever surface them. Notebook 3
+reports any it could not translate when it builds the Arabic rows, and
+`export_gaps(REPORTS)` writes them out with `val_ar` blank.
 
 Without this they come out in English from notebook 3 and nothing flags it. Any
 new calculation added later is caught automatically, because the check is
@@ -51,8 +58,8 @@ derived from the same constants the calculations use.
 ### The loop, either kind
 
 1. Run the notebook.
-2. Call `export_untranslated(REPORTS)` for kind 1, `export_calculated_labels()`
-   for kind 2.
+2. Call `export_untranslated(REPORTS)` in notebook 2 for kind 1,
+   `export_gaps(REPORTS)` in notebook 3 for kind 2.
 3. Translate them yourself. Use the official English name of a statistical body
    where one exists — search `translation dict.xlsx` first, so wording stays
    consistent with what is already there.
@@ -111,9 +118,11 @@ rows before writing.
 - **Two Health sheets use a legacy layout** and fail at `extract`:
   `Iraq health.xlsx` → `Iraq health - Health_4_a`, `jordan health.xlsx` →
   `Health_1_a`.
-- **43 English terms have more than one Arabic spelling**, so back-translation
-  picks the first and reports the rest. Mostly `Causes of death` variants and
-  whitespace variants of the same citation — worth a dictionary cleanup.
+- **43 English terms have more than one Arabic spelling.** This is why notebook 3
+  translates only the rows it creates rather than the whole file: inverting the
+  dictionary is lossy, and the calculated rows' vocabulary is small enough to be
+  safe. Mostly `Causes of death` variants and whitespace variants of the same
+  citation — worth a dictionary cleanup.
 - Questionnaire cover tabs (`العنوان`, `قائمة الجداول`, `كيفية الإستخدام`,
   `البيانات الوصفية`) have no `index` column and are skipped by design.
 
