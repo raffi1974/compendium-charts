@@ -6,11 +6,18 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 |---|---|---|---|
 | 1 | `Compendium_1_Long_Files.ipynb` | `DATA COLLECTOR\datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `merged longfiles_<LANG>\<Chapter>_<LANG>.xlsx` |
 | 2 | `Compendium_2_Translation.ipynb` | both `merged longfiles_*` | `<Chapter>_EN.xlsx` |
-| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx` + `merged longfiles_AR\` | calculated rows added to `<Chapter>_EN.xlsx`; `<Chapter>_AR.xlsx` |
+| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx` + `merged longfiles_AR\` | calculated rows added to `<Chapter>_EN.xlsx`; `<Chapter>_AR.xlsx`; `new_indicators_inconsistencies.txt` |
 | 4 | `Compendium_4_Tabulations.ipynb` | both final files | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
 
 Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation is
 last so it picks up the calculated indicators.
+
+**Notebook 3 saves every contradiction it meets** to
+`new_indicators_inconsistencies.txt` beside the outputs — a reported total that
+disagrees with the sum of its own age bands, age shares not reaching 100%, a
+value that is not a number, a country-year with only one sex. These are findings
+about the questionnaires, not the code, so they outlive the run and can go back
+to the country that reported them.
 
 **Notebook 3 translates only the rows it creates.** It used to back-translate
 the whole English file into Arabic, which meant pushing hundreds of thousands of
