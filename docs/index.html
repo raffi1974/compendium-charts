@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compendium Data Gaps</title>
+<style>
+/* Dark-only by design. Colours are the validated dark steps: categorical hues
+   for identity, a single blue ramp for magnitude, status hues for severity -
+   every status also carries a word, never colour alone. */
+:root {
+  color-scheme: dark;
+  --surface-0: #121211;
+  --surface-1: #1a1a19;
+  --surface-2: #232322;
+  --surface-3: #2c2c2a;
+  --line:      #383835;
+  --ink:       #ffffff;
+  --ink-2:     #c3c2b7;
+  --ink-3:     #8a8a80;
+
+  --blue:   #3987e5;
+  --aqua:   #199e70;
+  --yellow: #c98500;
+  --orange: #d95926;
+  --red:    #e66767;
+  --violet: #9085e9;
+
+  /* Sequential blue, stepped for a dark surface: low recedes, high is bright. */
+  --s0: #1e2530;
+  --s1: #184f95;
+  --s2: #256abf;
+  --s3: #3987e5;
+  --s4: #6da7ec;
+  --s5: #9ec5f4;
+  --s6: #cde2fb;
+
+  --radius: 10px;
+  --pad: 20px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--ink);
+  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--blue); }
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 20px; }
+h2 { font-size: 15px; }
+h3 { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.muted { color: var(--ink-3); }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 0 var(--pad) 64px; }
+
+/* ---------------------------------------------------------------- header */
+header {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in oklab, var(--surface-0) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.head-inner {
+  max-width: 1400px; margin: 0 auto; padding: 14px var(--pad);
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+}
+.badge {
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-3); border: 1px solid var(--line);
+  padding: 3px 8px; border-radius: 999px;
+}
+/* Filters in one row above the charts. */
+.filters {
+  max-width: 1400px; margin: 0 auto; padding: 0 var(--pad) 14px;
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+select, input[type="search"] {
+  background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 7px 10px; font: inherit; font-size: 13px; min-width: 150px;
+}
+select:focus, input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+.btn {
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer;
+}
+.btn:hover { background: var(--surface-3); color: var(--ink); }
+.btn[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* ----------------------------------------------------------------- cards */
+section { margin-top: 26px; }
+.card {
+  background: var(--surface-1); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 18px;
+}
+.card + .card { margin-top: 14px; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline;
+             gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface-1); border: 1px solid var(--line);
+       border-radius: var(--radius); padding: 16px 18px; }
+.kpi .n { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; }
+.kpi .l { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+.kpi .sub { font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+
+/* --------------------------------------------------------------- heatmap */
+.hm-scroll { overflow-x: auto; }
+.hm { display: grid; gap: 2px; min-width: 640px; }   /* 2px surface gap between cells */
+.hm .lbl { font-size: 12px; color: var(--ink-2); padding-right: 10px;
+           display: flex; align-items: center; justify-content: flex-end;
+           white-space: nowrap; }
+.hm .yr { font-size: 11px; color: var(--ink-3); text-align: center; padding-bottom: 4px; }
+.cell { height: 22px; border-radius: 3px; cursor: default; }
+.cell:hover { outline: 2px solid var(--ink); outline-offset: -1px; }
+.ramp { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-3); }
+.ramp i { width: 22px; height: 10px; border-radius: 2px; display: inline-block; }
+
+/* ------------------------------------------------- band bars & histogram */
+.band-row { display: grid; grid-template-columns: 150px 1fr 42px; align-items: center; gap: 10px; }
+.band-row .name { font-size: 12px; color: var(--ink-2); white-space: nowrap;
+                  overflow: hidden; text-overflow: ellipsis; }
+.stack { display: flex; height: 15px; border-radius: 4px; overflow: hidden;
+         background: var(--surface-3); gap: 2px; }  /* 2px surface gap between segments */
+.stack i { display: block; height: 100%; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; }
+
+.hist { display: grid; gap: 3px; }
+.hist-row { display: grid; grid-template-columns: 66px 1fr 92px; align-items: center; gap: 10px; }
+.hist-row .pts { font-size: 12px; color: var(--ink-2); text-align: right;
+                 font-variant-numeric: tabular-nums; }
+.hist-row .barwrap { background: var(--surface-2); border-radius: 4px; height: 16px; }
+.hist-row .bar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.hist-row .n { font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hist-row .n small { color: var(--ink-3); margin-left: 5px; }
+.hist-row.full .pts, .hist-row.full .n { color: var(--aqua); font-weight: 600; }
+.hist-row.zero .pts, .hist-row.zero .n { color: var(--red); font-weight: 600; }
+
+/* ------------------------------------------------------------------ bars */
+.bars { display: grid; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 190px 1fr 52px; align-items: center; gap: 10px; }
+.bar-row .name { font-size: 12px; color: var(--ink-2); white-space: nowrap;
+                 overflow: hidden; text-overflow: ellipsis; }
+.track { background: var(--surface-3); border-radius: 4px; height: 14px; overflow: hidden; }
+.fill { height: 100%; border-radius: 0 4px 4px 0; }   /* rounded data-end only */
+.bar-row .val { font-size: 12px; color: var(--ink); text-align: right;
+                font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- tables */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+     color: var(--ink-3); font-weight: 600; cursor: pointer; user-select: none;
+     position: sticky; top: 0; background: var(--surface-1); }
+th:hover { color: var(--ink); }
+tbody tr:hover { background: var(--surface-2); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.scroll { max-height: 480px; overflow: auto; border: 1px solid var(--line);
+          border-radius: 8px; }
+.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+       padding: 2px 7px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.t-crit { color: var(--red);    border-color: color-mix(in oklab, var(--red) 40%, transparent); }
+.t-ser  { color: var(--orange); border-color: color-mix(in oklab, var(--orange) 40%, transparent); }
+.t-warn { color: var(--yellow); border-color: color-mix(in oklab, var(--yellow) 40%, transparent); }
+.t-ok   { color: var(--aqua);   border-color: color-mix(in oklab, var(--aqua) 40%, transparent); }
+
+/* ------------------------------------------------------------ year strip */
+.strip { display: flex; gap: 2px; }
+.strip span { width: 15px; height: 15px; border-radius: 2px; }
+.has { background: var(--s3); }
+.no  { background: var(--surface-3); }
+
+/* --------------------------------------------------------------- tooltip */
+#tip {
+  position: fixed; pointer-events: none; z-index: 100; opacity: 0;
+  transition: opacity .1s; background: var(--surface-3);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  font-size: 12px; max-width: 300px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+#tip b { display: block; margin-bottom: 3px; }
+#tip .r { color: var(--ink-2); }
+.empty { color: var(--ink-3); padding: 28px; text-align: center; }
+.note { font-size: 12px; color: var(--ink-3); margin-top: 10px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <h1>Compendium Data Gaps</h1>
+    <span class="badge" id="gen"></span>
+    <span class="muted" style="font-size:12px" id="scope"></span>
+  </div>
+  <div class="filters">
+    <select id="f-chapter"></select>
+    <select id="f-country"></select>
+    <select id="f-indicator"></select>
+    <input type="search" id="f-search" placeholder="Search indicator or country…">
+    <button class="btn" id="f-reset">Reset</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Coverage by country and year</h2>
+        <h3>Share of that country's indicator series reporting in each year</h3>
+      </div>
+      <div class="ramp">
+        <span>0%</span>
+        <i style="background:var(--s0)"></i><i style="background:var(--s1)"></i>
+        <i style="background:var(--s2)"></i><i style="background:var(--s3)"></i>
+        <i style="background:var(--s4)"></i><i style="background:var(--s5)"></i>
+        <i style="background:var(--s6)"></i>
+        <span>100%</span>
+      </div>
+    </div>
+    <div class="hm-scroll"><div class="hm" id="heatmap"></div></div>
+    <p class="note">Expected range 2010&ndash;2026. A cell is the percentage of this
+      country's series for the current filter that report anything that year &mdash;
+      not the share of rows filled, which the questionnaire grid makes meaningless.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div>
+      <h2>How complete are the time series?</h2>
+      <h3>Number of series holding each count of the 17 expected years</h3>
+    </div></div>
+    <div class="hist" id="hist"></div>
+    <p class="note">Read this instead of an average. A series with one point and a
+      series with seventeen would average to something that reads as
+      &ldquo;half full&rdquo;; the shape of this distribution is the honest answer.
+      <strong>0 points</strong> means the country never reported that indicator at
+      all &mdash; those pairs are counted here rather than left out.</p>
+  </section>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:14px">
+    <div class="card">
+      <div class="card-head"><div>
+        <h2>Countries</h2>
+        <h3>Series by completeness band</h3>
+      </div></div>
+      <div class="legend" id="legend" style="margin-bottom:12px"></div>
+      <div class="bars" id="bars-country"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div>
+        <h2>Indicators</h2>
+        <h3>Series by completeness band</h3>
+      </div></div>
+      <div class="legend" id="legend2" style="margin-bottom:12px"></div>
+      <div class="bars" id="bars-indicator"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div>
+      <h2>Disaggregation availability</h2>
+      <h3>Which breakdowns each country actually supplies, across the filtered indicators</h3>
+    </div></div>
+    <div class="hm-scroll"><div class="hm" id="dimgrid"></div></div>
+    <p class="note">Darkest means the breakdown is never supplied; brighter means more
+      indicator&nbsp;&times;&nbsp;country series carry it. Seven dimensions have no
+      &ldquo;total&rdquo; category by design, so an indicator broken down that way has
+      no headline row &mdash; that is expected, not a gap.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Series explorer</h2>
+        <h3>Every indicator &times; country series, with the years it is missing</h3>
+      </div>
+      <span class="muted" style="font-size:12px" id="series-count"></span>
+    </div>
+    <div class="scroll">
+      <table id="series-table">
+        <thead><tr>
+          <th data-sort="chapter">Chapter</th>
+          <th data-sort="indicator">Indicator</th>
+          <th data-sort="country">Country</th>
+          <th data-sort="points" class="num">Points</th>
+          <th data-sort="headlinePoints" class="num">Headline</th>
+          <th data-sort="first" class="num">First</th>
+          <th data-sort="last" class="num">Last</th>
+          <th data-sort="gap" class="num">Longest gap</th>
+          <th>2010&ndash;2026</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="note"><strong>Points</strong> is how many of the 17 expected years carry a
+      value; <strong>headline</strong> counts only years with a fully-aggregated value
+      (every breakdown at its total), and is blank where the indicator has no total row
+      by design. A 0-point row means the country never reported that indicator.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Flagged figures</h2>
+        <h3>Contradictions and implausible jumps, worst first</h3>
+      </div>
+      <div id="issue-kinds" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+    <div class="scroll">
+      <table id="issue-table">
+        <thead><tr>
+          <th>Severity</th><th>Kind</th><th>Chapter</th>
+          <th>Indicator</th><th>Country</th><th>Detail</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="note" id="issue-note"></p>
+  </section>
+
+</div>
+
+<div id="tip"></div>
+<script src="data.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+
+// data.js is generated by Compendium_Data_Gaps.ipynb. Say so plainly when it is
+// absent or from an older run, rather than rendering numbers that would be
+// quietly wrong - series[3] used to hold a coverage percentage and now holds a
+// point count, and 52.6 "points out of 17" would look like data rather than a bug.
+const G = window.GAPS;
+if (!G || !Array.isArray(G.series) || !G.bands) {
+  document.body.innerHTML = `<div class="wrap" style="padding-top:80px;max-width:640px">
+    <h1 style="margin-bottom:12px">No data yet</h1>
+    <p style="color:var(--ink-2);line-height:1.7">
+      This dashboard reads <code>docs/data.js</code>, which is written by the last
+      cell of <code>Compendium_Data_Gaps.ipynb</code>.
+      ${G ? 'The file present is from an older run and uses a different shape.' : 'The file is not there yet.'}
+    </p>
+    <p style="color:var(--ink-2);line-height:1.7">
+      Run the pipeline notebooks in <code>../codes/</code>, then run
+      <code>Compendium_Data_Gaps.ipynb</code> and reload this page.
+    </p></div>`;
+  throw new Error("data.js missing or from an older schema");
+}
+const YEARS = G.years;
+
+// series row: [chapter, indicator, country, coverage, headline, first, last, gap, values, missing[]]
+const NYEARS = YEARS.length;
+const BANDS = (G.bands || [['none',0,0],['sparse',1,6],['partial',7,12],
+                           ['strong',13,16],['complete',17,17]]).slice().reverse();
+// Ordered categories, so an ordinal ramp - one hue, light to dark - not
+// categorical hues. "none" is held out in grey: absence is not a low value on
+// the same scale, it is a different thing.
+const BAND_COLOR = { complete: 'var(--s6)', strong: 'var(--s4)',
+                     partial: 'var(--s3)', sparse: 'var(--s1)', none: 'var(--surface-3)' };
+const bandOf = p => (BANDS.find(([, lo, hi]) => p >= lo && p <= hi) || BANDS[BANDS.length-1])[0];
+
+const S = G.series.map(r => ({
+  chapter: G.chapters[r[0]], indicator: G.indicators[r[1]], country: G.countries[r[2]],
+  points: r[3], headlinePoints: r[4], first: r[5], last: r[6], gap: r[7],
+  values: r[8], missing: new Set(r[9]),
+  get coverage() { return this.points / NYEARS * 100; },
+  get band() { return bandOf(this.points); },
+}));
+const D = G.dims.map(r => ({
+  chapter: G.chapters[r[0]], indicator: G.indicators[r[1]], country: G.countries[r[2]],
+  dimension: G.dimensions[r[3]], categories: r[4],
+}));
+const I = G.issues.map(r => ({
+  chapter: G.chapters[r[0]], kind: G.kinds[r[1]],
+  indicator: r[2] >= 0 ? G.indicators[r[2]] : '', country: r[3] >= 0 ? G.countries[r[3]] : '',
+  severity: r[4], detail: r[5],
+}));
+
+const state = { chapter: '', country: '', indicator: '', search: '',
+                sort: 'points', dir: -1, kind: '' };
+
+/* ------------------------------------------------------------------ tooltip */
+const tip = $('#tip');
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if (x + w > innerWidth - 8) x = e.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = e.clientY - h - pad;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+const hideTip = () => tip.style.opacity = 0;
+
+/* ------------------------------------------------------------------ colour */
+const RAMP = ['--s0','--s1','--s2','--s3','--s4','--s5','--s6'];
+function rampColor(pct) {
+  if (pct <= 0) return 'var(--s0)';
+  const i = Math.min(RAMP.length - 1, 1 + Math.floor(pct / 100 * (RAMP.length - 1)));
+  return `var(${RAMP[i]})`;
+}
+function severityTag(kind, severity) {
+  if (kind === 'units') return ['t-crit', 'critical'];
+  if (severity >= 1000) return ['t-crit', 'critical'];
+  if (severity >= 100) return ['t-ser', 'serious'];
+  return ['t-warn', 'review'];
+}
+
+/* ------------------------------------------------------------------ filter */
+function filtered(rows) {
+  const q = state.search.toLowerCase();
+  return rows.filter(r =>
+    (!state.chapter   || r.chapter === state.chapter) &&
+    (!state.country   || r.country === state.country) &&
+    (!state.indicator || r.indicator === state.indicator) &&
+    (!q || (r.indicator || '').toLowerCase().includes(q)
+         || (r.country || '').toLowerCase().includes(q)));
+}
+const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+
+/* -------------------------------------------------------------------- KPIs */
+function renderKpis(rows) {
+  const share = n => rows.length ? Math.round(n / rows.length * 100) + '% of series' : '—';
+  const full = rows.filter(r => r.points === NYEARS).length;
+  const empty = rows.filter(r => r.points === 0).length;
+  const usable = rows.filter(r => r.points >= 13).length;
+  const stale = rows.filter(r => r.last !== null && r.last < 2020).length;
+  const issues = filtered(I).length;
+  const kpis = [
+    ['Series', rows.length.toLocaleString(), `${new Set(rows.map(r=>r.indicator)).size} indicators × ${new Set(rows.map(r=>r.country)).size} countries`],
+    [`Complete (${NYEARS}/${NYEARS})`, full.toLocaleString(), share(full)],
+    ['13 points or more', usable.toLocaleString(), share(usable)],
+    ['Never reported', empty.toLocaleString(), share(empty)],
+    ['Stale since 2019', stale.toLocaleString(), share(stale)],
+    ['Flagged figures', issues.toLocaleString(), `of ${G.issuesTotal.toLocaleString()} found`],
+  ];
+  $('#kpis').innerHTML = kpis.map(([l, n, sub]) =>
+    `<div class="kpi"><div class="n">${n}</div><div class="l">${l}</div>
+     <div class="sub">${sub}</div></div>`).join('');
+}
+
+/* ----------------------------------------------------------------- heatmap */
+function renderHeatmap(rows) {
+  const countries = [...new Set(rows.map(r => r.country))].sort();
+  const el = $('#heatmap');
+  if (!countries.length) { el.innerHTML = '<p class="empty">Nothing matches these filters.</p>'; return; }
+  el.style.gridTemplateColumns = `minmax(120px,auto) repeat(${YEARS.length}, minmax(26px,1fr))`;
+
+  let html = '<div></div>' + YEARS.map(y =>
+    `<div class="yr">${String(y).slice(2)}</div>`).join('');
+
+  for (const c of countries) {
+    const mine = rows.filter(r => r.country === c);
+    html += `<div class="lbl">${c}</div>`;
+    for (const y of YEARS) {
+      const have = mine.filter(r => !r.missing.has(y)).length;
+      const pct = mine.length ? have / mine.length * 100 : 0;
+      html += `<div class="cell" style="background:${rampColor(pct)}"
+        data-tip="<b>${c} · ${y}</b><span class='r'>${have} of ${mine.length} series reporting · ${pct.toFixed(0)}%</span>"></div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+/* --------------------------------------------------------------- histogram */
+function renderHistogram(rows) {
+  const counts = new Array(NYEARS + 1).fill(0);
+  for (const r of rows) counts[r.points]++;
+  const max = Math.max(...counts, 1);
+  const el = $('#hist');
+  if (!rows.length) { el.innerHTML = '<p class="empty">Nothing matches these filters.</p>'; return; }
+
+  let html = '';
+  for (let p = NYEARS; p >= 0; p--) {
+    const n = counts[p];
+    const cls = p === NYEARS ? ' full' : (p === 0 ? ' zero' : '');
+    const label = p === NYEARS ? `${p} · full` : (p === 0 ? '0 · none' : `${p}`);
+    const pct = rows.length ? (n / rows.length * 100) : 0;
+    html += `<div class="hist-row${cls}">
+      <div class="pts">${label}</div>
+      <div class="barwrap"><div class="bar" style="width:${n / max * 100}%;
+        background:${BAND_COLOR[bandOf(p)]}"
+        data-tip="<b>${p} of ${NYEARS} years</b><span class='r'>${n.toLocaleString()} series · ${pct.toFixed(1)}%</span>"></div></div>
+      <div class="n">${n.toLocaleString()}<small>${pct.toFixed(1)}%</small></div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+/* -------------------------------------------------------------- band bars */
+function renderBands(target, rows, key, limit) {
+  const groups = {};
+  for (const r of rows) (groups[r[key]] ||= []).push(r);
+  const data = Object.entries(groups).map(([name, list]) => {
+    const by = {};
+    for (const [b] of BANDS) by[b] = 0;
+    for (const r of list) by[r.band]++;
+    return { name, by, n: list.length,
+             score: (by.complete * 3 + by.strong * 2 + by.partial) / list.length };
+  }).sort((a, b) => b.score - a.score).slice(0, limit);
+
+  const el = $(target);
+  if (!data.length) { el.innerHTML = '<p class="empty">No data.</p>'; return; }
+  el.innerHTML = data.map(d => `
+    <div class="band-row">
+      <div class="name" title="${d.name}">${d.name}</div>
+      <div class="stack">${BANDS.map(([b, lo, hi]) => {
+        const n = d.by[b]; if (!n) return '';
+        const span = lo === hi ? `${lo}` : `${lo}–${hi}`;
+        return `<i style="width:${n / d.n * 100}%;background:${BAND_COLOR[b]}"
+          data-tip="<b>${d.name}</b><span class='r'>${n} series ${b} (${span} points)</span>"></i>`;
+      }).join('')}</div>
+      <div class="val">${d.by.complete}<small class="muted">/${d.n}</small></div>
+    </div>`).join('');
+}
+
+function renderLegend() {
+  const html = BANDS.map(([b, lo, hi]) =>
+    `<span><i style="background:${BAND_COLOR[b]}"></i>${b} ${lo === hi ? lo : lo + '–' + hi}</span>`
+  ).join('');
+  $('#legend').innerHTML = html;
+  $('#legend2').innerHTML = html;
+}
+
+/* --------------------------------------------------------- dimension grid */
+function renderDims(rows) {
+  const keep = new Set(rows.map(r => r.indicator + '|' + r.country));
+  const mine = D.filter(d => keep.has(d.indicator + '|' + d.country));
+  const countries = [...new Set(rows.map(r => r.country))].sort();
+  const dims = [...new Set(mine.map(d => d.dimension))].sort();
+  const el = $('#dimgrid');
+  if (!countries.length || !dims.length) {
+    el.innerHTML = '<p class="empty">No disaggregation recorded for this selection.</p>'; return;
+  }
+  el.style.gridTemplateColumns = `minmax(120px,auto) repeat(${dims.length}, minmax(64px,1fr))`;
+  const max = Math.max(...countries.map(c => Math.max(...dims.map(d =>
+    mine.filter(x => x.country === c && x.dimension === d).length), 0)), 1);
+
+  let html = '<div></div>' + dims.map(d =>
+    `<div class="yr" title="${d}">${d.length > 12 ? d.slice(0, 11) + '…' : d}</div>`).join('');
+  for (const c of countries) {
+    html += `<div class="lbl">${c}</div>`;
+    for (const d of dims) {
+      const n = mine.filter(x => x.country === c && x.dimension === d).length;
+      html += `<div class="cell" style="background:${n ? rampColor(n / max * 100) : 'var(--s0)'}"
+        data-tip="<b>${c} · ${d}</b><span class='r'>${n ? n + ' indicator series carry this breakdown' : 'never supplied'}</span>"></div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+/* ----------------------------------------------------------------- tables */
+function renderSeries(rows) {
+  const k = state.sort, dir = state.dir;
+  const sorted = [...rows].sort((a, b) => {
+    const va = a[k], vb = b[k];
+    if (va === null) return 1; if (vb === null) return -1;
+    return (typeof va === 'string' ? va.localeCompare(vb) : va - vb) * dir;
+  });
+  $('#series-count').textContent = `${sorted.length.toLocaleString()} series`;
+  $('#series-table tbody').innerHTML = sorted.slice(0, 400).map(r => `
+    <tr>
+      <td class="muted">${r.chapter}</td>
+      <td title="${r.indicator}">${r.indicator.length > 46 ? r.indicator.slice(0, 45) + '…' : r.indicator}</td>
+      <td>${r.country}</td>
+      <td class="num">${r.points}<span class="muted">/${NYEARS}</span></td>
+      <td class="num">${r.headlinePoints > 0 ? r.headlinePoints : '<span class="muted">—</span>'}</td>
+      <td class="num">${r.first ?? '—'}</td>
+      <td class="num">${r.last ?? '—'}</td>
+      <td class="num">${r.gap}</td>
+      <td><div class="strip">${YEARS.map(y =>
+        `<span class="${r.missing.has(y) ? 'no' : 'has'}" title="${y}: ${r.missing.has(y) ? 'missing' : 'reported'}"></span>`).join('')}</div></td>
+    </tr>`).join('') || '<tr><td colspan="9" class="empty">Nothing matches these filters.</td></tr>';
+}
+
+function renderIssues() {
+  let rows = filtered(I);
+  if (state.kind) rows = rows.filter(r => r.kind === state.kind);
+  rows = [...rows].sort((a, b) => b.severity - a.severity).slice(0, 300);
+  $('#issue-table tbody').innerHTML = rows.map(r => {
+    const [cls, word] = severityTag(r.kind, r.severity);
+    return `<tr>
+      <td><span class="tag ${cls}">${word}</span></td>
+      <td class="muted">${r.kind}</td>
+      <td class="muted">${r.chapter}</td>
+      <td title="${r.indicator}">${r.indicator.length > 38 ? r.indicator.slice(0, 37) + '…' : r.indicator}</td>
+      <td>${r.country}</td>
+      <td class="muted">${r.detail}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Nothing matches these filters.</td></tr>';
+  $('#issue-note').innerHTML =
+    `Showing the ${Math.min(rows.length, 300)} most severe of ${G.issuesTotal.toLocaleString()} flagged.
+     The full list is in <code>data_gaps_report.xlsx</code>.
+     <strong>Severity</strong> is the size of the contradiction &mdash; percent off for a
+     mismatched total, the multiple for a year-on-year jump.`;
+}
+
+/* ------------------------------------------------------------------ wiring */
+function fillSelect(id, label, values) {
+  $(id).innerHTML = `<option value="">${label}</option>` +
+    values.map(v => `<option>${v}</option>`).join('');
+}
+function render() {
+  const rows = filtered(S);
+  renderKpis(rows); renderHeatmap(rows); renderHistogram(rows);
+  renderBands('#bars-country', rows, 'country', 25);
+  renderBands('#bars-indicator', rows, 'indicator', 25);
+  renderDims(rows); renderSeries(rows); renderIssues();
+}
+
+fillSelect('#f-chapter', 'All chapters', G.chapters);
+fillSelect('#f-country', 'All countries', G.countries);
+fillSelect('#f-indicator', 'All indicators', G.indicators);
+$('#gen').textContent = 'generated ' + G.generated;
+$('#scope').textContent =
+  `${G.series.length.toLocaleString()} series · ${G.chapters.length} chapters · expected range 2010–2026`;
+
+$('#f-chapter').onchange = e => { state.chapter = e.target.value; render(); };
+$('#f-country').onchange = e => { state.country = e.target.value; render(); };
+$('#f-indicator').onchange = e => { state.indicator = e.target.value; render(); };
+$('#f-search').oninput = e => { state.search = e.target.value; render(); };
+$('#f-reset').onclick = () => {
+  Object.assign(state, { chapter: '', country: '', indicator: '', search: '', kind: '' });
+  $('#f-chapter').value = ''; $('#f-country').value = '';
+  $('#f-indicator').value = ''; $('#f-search').value = '';
+  render();
+};
+
+$('#issue-kinds').innerHTML = Object.entries(G.issueCounts)
+  .sort((a, b) => b[1] - a[1])
+  .map(([k, n]) => `<button class="btn" data-kind="${k}">${k} · ${n.toLocaleString()}</button>`).join('');
+$('#issue-kinds').onclick = e => {
+  const b = e.target.closest('[data-kind]'); if (!b) return;
+  const k = b.dataset.kind;
+  state.kind = state.kind === k ? '' : k;
+  [...$('#issue-kinds').children].forEach(c =>
+    c.setAttribute('aria-pressed', c.dataset.kind === state.kind));
+  renderIssues();
+};
+
+document.querySelectorAll('#series-table th[data-sort]').forEach(th => {
+  th.onclick = () => {
+    const k = th.dataset.sort;
+    state.dir = state.sort === k ? -state.dir : (['points','headlinePoints','first','last','gap'].includes(k) ? -1 : 1);
+    state.sort = k;
+    renderSeries(filtered(S));
+  };
+});
+
+document.addEventListener('mouseover', e => {
+  const t = e.target.closest('[data-tip]');
+  if (t) showTip(e, t.dataset.tip); else hideTip();
+});
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-tip]');
+  if (t) showTip(e, t.dataset.tip);
+});
+document.addEventListener('mouseleave', hideTip);
+
+renderLegend();
+render();
+</script>
+</body>
+</html>

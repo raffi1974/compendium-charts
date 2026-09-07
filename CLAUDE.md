@@ -20,10 +20,10 @@ no need: the Arabic long file from notebook 1 is the *original*, straight from
 the questionnaires. Only the calculated rows are missing from it, so only those
 are translated. Never reintroduce a whole-file back-translation.
 
-**Checking the data is a separate project**, `../compendium data quality/`, with
-its own `CLAUDE.md`. It holds `Compendium_Data_Quality.ipynb` (structural checks
+**Checking the data lives in `data quality/`**, with its own `CLAUDE.md`. It holds `Compendium_Data_Quality.ipynb` (structural checks
 on the questionnaires, contradiction checks on the final files) and
-`Compendium_Data_Gaps.ipynb` (completeness, and the dashboard in its `docs/`).
+`Compendium_Data_Gaps.ipynb` (completeness, and the dashboard in `docs/` at the
+repository root).
 Nothing there changes data — it only measures and reports. Run it after step 2,
 before building tabulations on figures that have not been sanity-checked.
 
