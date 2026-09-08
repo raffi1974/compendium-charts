@@ -71,7 +71,9 @@ derived from the same constants the calculations use.
    where one exists — search `translation dict.xlsx` first, so wording stays
    consistent with what is already there.
 4. Call `update_dictionary(filled)`. It backs the file up first, skips rows
-   already present, and writes `translation_dict_snapshot.csv` into this repo.
+   already present, marks what it adds with `status = "updated"` so machine
+   translations can be told from hand-typed ones, and writes
+   `translation_dict_snapshot.csv` into this repo.
 5. Re-run the notebook and confirm the gap list is empty.
 6. Report what you added, and flag any translation involving real judgement.
 
