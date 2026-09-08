@@ -4,10 +4,12 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
-| 1 | `Compendium_1_Long_Files.ipynb` | `DATA COLLECTOR\datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `merged_long_files\<Chapter>_<LANG>.xlsx` |
-| 2 | `Compendium_2_Translation.ipynb` | `merged_long_files\` | `<Chapter>_EN.xlsx` |
-| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx` + `merged_long_files\` | calculated rows added to `<Chapter>_EN.xlsx`; `<Chapter>_AR.xlsx` |
-| 4 | `Compendium_4_Tabulations.ipynb` | both final files | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
+| 1 | `Compendium_1_Long_Files.ipynb` | `datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `<Chapter>_AR.xlsx`, and `<Chapter>_EN_questionnaires.xlsx` if English questionnaires exist |
+| 2 | `Compendium_2_Translation.ipynb` | `<Chapter>_AR.xlsx` + `<Chapter>_EN_questionnaires.xlsx` | `<Chapter>_EN.xlsx` |
+| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | calculated rows added to both |
+| 4 | `Compendium_4_Tabulations.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
+
+Every long file lives in **`merged_long_files\`**, one folder for both languages.
 
 Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation is
 last so it picks up the calculated indicators.
@@ -23,9 +25,17 @@ always reflects the latest run of each step and stays in step order whatever
 order they ran in. These are findings about the questionnaires, not the code, so
 they outlive the run and can go back to the country that reported them.
 
-**Long files live in one folder**, `merged_long_files`, not one per language —
-every filename already carries its `_AR` / `_EN` suffix. `long_file_folder()`
-still takes a language argument so call sites read the same; it ignores it.
+**Why `<Chapter>_EN_questionnaires.xlsx` has its own name.** Notebook 1's
+English output and notebook 2's English output are different files — one is
+English questionnaires made long, the other is the translated Arabic with those
+rows appended. Two folders used to keep them apart. Now that there is one
+folder, they need different names: sharing `<Chapter>_EN.xlsx` would make
+notebook 2 read and overwrite the same file, so a second run would append its
+own output to itself and duplicate every row.
+
+The Arabic side needs no such trick — notebook 3 strips its own previously-added
+rows before appending, so writing back to `<Chapter>_AR.xlsx` in place is
+idempotent.
 
 **Notebook 3 translates only the rows it creates.** It used to back-translate
 the whole English file into Arabic, which meant pushing hundreds of thousands of
