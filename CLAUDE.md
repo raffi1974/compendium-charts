@@ -5,8 +5,8 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
 | 1 | `Compendium_1_Long_Files.ipynb` | `datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `<Chapter>_AR.xlsx`, and `<Chapter>_EN_questionnaires.xlsx` if English questionnaires exist |
-| 2 | `Compendium_2_Translation.ipynb` | `<Chapter>_AR.xlsx` + `<Chapter>_EN_questionnaires.xlsx` | `<Chapter>_EN.xlsx` |
-| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | calculated rows added to both |
+| 2 | `Compendium_2_New_Indicators.ipynb` | `<Chapter>_AR.xlsx` | the calculated rows, in Arabic, appended to it |
+| 3 | `Compendium_3_Translation.ipynb` | `<Chapter>_AR.xlsx` + `<Chapter>_EN_questionnaires.xlsx` | `<Chapter>_EN.xlsx` |
 | 4 | `Compendium_4_Tabulations.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
 
 Every long file lives in **`merged_long_files\`**, one folder for both languages.
@@ -15,10 +15,19 @@ Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation
 last so it picks up the calculated indicators.
 
 **All four notebooks record what they find wrong with the source data** in
-`pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 the sheets it
-could not read and the labels it could not match, notebook 2 the values with no
-translation, notebook 3 the contradictions in the figures, notebook 4 the
-tabulations that came out wrong.
+`pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 the sheets
+it could not read, the labels it could not match and every Value it had to
+correct; notebook 2 the contradictions in the figures; notebook 3 the values
+with no translation; notebook 4 the tabulations that came out wrong. Every
+record carries the country, indicator and year it came from, so a finding can be
+traced back to the cell.
+
+**Notebook 1 cleans the Value column and reports every change.** A number
+wrapped in text keeps only the number (`7845(الاعداد بالالف)` → `7845`), and a
+placeholder like `-` becomes blank. Dropping `الاعداد بالالف` also drops the
+fact that the figure is in thousands, which leaves it a thousand times smaller
+than its neighbours — which is exactly why each one is reported rather than
+quietly fixed.
 
 Each notebook owns a numbered section and rewrites only its own, so the file
 always reflects the latest run of each step and stays in step order whatever
@@ -26,30 +35,36 @@ order they ran in. These are findings about the questionnaires, not the code, so
 they outlive the run and can go back to the country that reported them.
 
 **Why `<Chapter>_EN_questionnaires.xlsx` has its own name.** Notebook 1's
-English output and notebook 2's English output are different files — one is
-English questionnaires made long, the other is the translated Arabic with those
-rows appended. Two folders used to keep them apart. Now that there is one
-folder, they need different names: sharing `<Chapter>_EN.xlsx` would make
-notebook 2 read and overwrite the same file, so a second run would append its
-own output to itself and duplicate every row.
+English output and notebook 3's are different files — one is English
+questionnaires made long, the other is the translated Arabic with those rows
+appended. Sharing `<Chapter>_EN.xlsx` would make notebook 3 read and overwrite
+the same file, so a second run would append its own output to itself and
+duplicate every row.
 
-The Arabic side needs no such trick — notebook 3 strips its own previously-added
+The Arabic side needs no such trick — notebook 2 strips its own previously-added
 rows before appending, so writing back to `<Chapter>_AR.xlsx` in place is
 idempotent.
 
-**Notebook 3 translates only the rows it creates.** It used to back-translate
-the whole English file into Arabic, which meant pushing hundreds of thousands of
-rows through an inverted dictionary — lossy exactly where several Arabic
-spellings share one English translation (43 terms on the current data). There is
-no need: the Arabic long file from notebook 1 is the *original*, straight from
-the questionnaires. Only the calculated rows are missing from it, so only those
-are translated. Never reintroduce a whole-file back-translation.
+**The calculations run before the translation, on the Arabic file.** They used
+to run on the English file, which meant translating the new rows *back* into
+Arabic afterwards — a round trip through an inverted dictionary for rows that
+had only just been created. Inverting is lossy exactly where several Arabic
+spellings share one English translation (43 terms on the current data). Doing
+the arithmetic in Arabic means the calculated rows are part of the file before
+anything is translated, and the whole file goes one way, once. **Never
+reintroduce a back-translation.**
+
+Notebook 2's code is written with English names — `"Male"`, `"Age Total"`,
+`"Population size by nationality"` — and `term()` resolves each into whatever
+the Arabic file says. A name the dictionary cannot resolve is reported rather
+than silently passed through, because a calculation built on an unresolved name
+matches nothing and quietly produces no rows.
 
 **Checking the data lives in `data quality/`**, with its own `CLAUDE.md`. It holds `Compendium_Data_Quality.ipynb` (structural checks
 on the questionnaires, contradiction checks on the final files) and
 `Compendium_Data_Gaps.ipynb` (completeness, and the dashboard in `docs/` at the
 repository root).
-Nothing there changes data — it only measures and reports. Run it after step 2,
+Nothing there changes data — it only measures and reports. Run it after step 3,
 before building tabulations on figures that have not been sanity-checked.
 
 Paths live outside this repo, under
@@ -63,28 +78,24 @@ and both must be closed before the run counts as finished.
 
 ### Kind 1 — a value the questionnaires used
 
-A country writes a survey name the dictionary has not seen. Notebooks 2 and 3
-find these by comparing a table before and after translation: a value with no
-entry passes through unchanged, and that is the gap. The blank column is
-`val_en` in notebook 2, `val_ar` in notebook 3.
+A country writes a survey name the dictionary has not seen. Notebook 3 finds
+these by comparing the table before and after translation: a value with no entry
+passes through unchanged, and that is the gap. What is missing is always the
+English side now that everything travels Arabic → English.
 
 ### Kind 2 — a label the pipeline invented
 
 The calculations create indicator titles and age-group labels (`Sex ratio,
 2010-2025 (per 100 females)`, `<15 years`, …) that appear in **no
-questionnaire**, so no before/after comparison can ever surface them. Notebook 3
-reports any it could not translate when it builds the Arabic rows, and
-`export_gaps(REPORTS)` writes them out with `val_ar` blank.
-
-Without this they come out in English from notebook 3 and nothing flags it. Any
-new calculation added later is caught automatically, because the check is
-derived from the same constants the calculations use.
+questionnaire**. Notebook 2 needs their *Arabic* to write the rows at all, so a
+missing one is caught immediately: `term()` reports it instead of falling back
+silently, and the run lists it under "term missing from the dictionary".
 
 ### The loop, either kind
 
 1. Run the notebook.
-2. Call `export_untranslated(REPORTS)` in notebook 2 for kind 1,
-   `export_gaps(REPORTS)` in notebook 3 for kind 2.
+2. Read them from `pipeline_inconsistencies.txt` — no spreadsheet is written.
+   Each carries the country, indicator and year of an example row.
 3. Translate them yourself. Use the official English name of a statistical body
    where one exists — search `translation dict.xlsx` first, so wording stays
    consistent with what is already there.
@@ -144,11 +155,12 @@ rows before writing.
 - **Two Health sheets use a legacy layout** and fail at `extract`:
   `Iraq health.xlsx` → `Iraq health - Health_4_a`, `jordan health.xlsx` →
   `Health_1_a`.
-- **43 English terms have more than one Arabic spelling.** This is why notebook 3
-  translates only the rows it creates rather than the whole file: inverting the
-  dictionary is lossy, and the calculated rows' vocabulary is small enough to be
-  safe. Mostly `Causes of death` variants and whitespace variants of the same
-  citation — worth a dictionary cleanup.
+- **43 English terms have more than one Arabic spelling.** Harmless now that
+  nothing is back-translated — the dictionary is only ever read Arabic →
+  English, and several Arabic spellings mapping to one English term is exactly
+  what it is for. It would matter again the moment anything inverted it. Mostly
+  `Causes of death` variants and whitespace variants of the same citation —
+  worth a dictionary cleanup regardless.
 - Questionnaire cover tabs (`العنوان`, `قائمة الجداول`, `كيفية الإستخدام`,
   `البيانات الوصفية`) have no `index` column and are skipped by design.
 
