@@ -4,20 +4,28 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
-| 1 | `Compendium_1_Long_Files.ipynb` | `DATA COLLECTOR\datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `merged longfiles_<LANG>\<Chapter>_<LANG>.xlsx` |
-| 2 | `Compendium_2_Translation.ipynb` | both `merged longfiles_*` | `<Chapter>_EN.xlsx` |
-| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx` + `merged longfiles_AR\` | calculated rows added to `<Chapter>_EN.xlsx`; `<Chapter>_AR.xlsx`; `new_indicators_inconsistencies.txt` |
+| 1 | `Compendium_1_Long_Files.ipynb` | `DATA COLLECTOR\datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `merged_long_files\<Chapter>_<LANG>.xlsx` |
+| 2 | `Compendium_2_Translation.ipynb` | `merged_long_files\` | `<Chapter>_EN.xlsx` |
+| 3 | `Compendium_3_New_Indicators.ipynb` | `<Chapter>_EN.xlsx` + `merged_long_files\` | calculated rows added to `<Chapter>_EN.xlsx`; `<Chapter>_AR.xlsx` |
 | 4 | `Compendium_4_Tabulations.ipynb` | both final files | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
 
 Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation is
 last so it picks up the calculated indicators.
 
-**Notebook 3 saves every contradiction it meets** to
-`new_indicators_inconsistencies.txt` beside the outputs — a reported total that
-disagrees with the sum of its own age bands, age shares not reaching 100%, a
-value that is not a number, a country-year with only one sex. These are findings
-about the questionnaires, not the code, so they outlive the run and can go back
-to the country that reported them.
+**All four notebooks record what they find wrong with the source data** in
+`pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 the sheets it
+could not read and the labels it could not match, notebook 2 the values with no
+translation, notebook 3 the contradictions in the figures, notebook 4 the
+tabulations that came out wrong.
+
+Each notebook owns a numbered section and rewrites only its own, so the file
+always reflects the latest run of each step and stays in step order whatever
+order they ran in. These are findings about the questionnaires, not the code, so
+they outlive the run and can go back to the country that reported them.
+
+**Long files live in one folder**, `merged_long_files`, not one per language —
+every filename already carries its `_AR` / `_EN` suffix. `long_file_folder()`
+still takes a language argument so call sites read the same; it ignores it.
 
 **Notebook 3 translates only the rows it creates.** It used to back-translate
 the whole English file into Arabic, which meant pushing hundreds of thousands of
