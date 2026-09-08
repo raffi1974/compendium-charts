@@ -137,6 +137,13 @@ rows before writing.
   would silently absorb a row into the group above it.
 - **Every populated breakdown column becomes a nested row level**, not just the
   first — taking only the first collapsed 63% of Population's rows.
+- **The sex ratio falls back to the sum of the age bands** when a country-year
+  has bands but no `Age Total` row. The population is there either way, and
+  dropping the year for the want of a total line would lose it for nothing. It
+  is not the same figure, though — a band sum misses whoever the country left
+  outside its bands, `Age unknown` included — so every one is logged as
+  `sex ratio taken from the age bands`, and a year whose two sexes came by
+  different routes is logged again as not quite comparable.
 - **Population totals take only the `Total` slice of one indicator.** The
   by-nationality and by-area indicators describe the same people; summing them,
   or their parts, double-counts.
@@ -149,9 +156,14 @@ rows before writing.
 - **Two Population indicators labelled "(%)" hold absolute head-counts** for
   eight countries each, with values up to 29,258,382. This accounts for 97% of
   the data-gaps report's implausible-value findings. Needs fixing at source.
-- **25 country-years where a reported total contradicts the sum of its own age
-  bands**, some by three orders of magnitude. The sex-ratio calculation logs
-  these rather than silently using them.
+- **13 country-year-sex cells where a reported total contradicts the sum of its
+  own age bands**, some by three orders of magnitude. The sex-ratio calculation
+  logs each one and uses the reported total, that being what the country stated.
+- **3 country-year-sex cells report age bands but no all-ages total.** The sex
+  ratio sums the bands for these; see above. Until 2026-09-08 this was reported
+  as 256, which counted every `كلا الجنسين` (both sexes) row as a missing
+  male/female total - those were never candidates for a ratio, and 253 of the
+  256 were that.
 - **Two Health sheets use a legacy layout** and fail at `extract`:
   `Iraq health.xlsx` → `Iraq health - Health_4_a`, `jordan health.xlsx` →
   `Health_1_a`.
