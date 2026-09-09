@@ -140,11 +140,26 @@ no label clips at any length.
 - `stacked_shares` sets its own height from measured content:
   `head + panel titles + 46 px per row + 44 px + 32 px per legend row`, with the
   legend column count derived from the widest category label.
-- `country_lines` stops the plot at 0.62 of the width, well short of the
-  published 0.73, so `Syrian Arab Republic` fits whole. The published SVGs cut it
-  off.
+- `country_lines` measures the legend and widens the *figure* to hold it, keeping
+  the plot itself a fixed `PLOT_WIDTH_PX = 700`. It used to fix the plot at 0.52
+  of an 800 px figure, which gave a 19-country legend nearly 40% of the width and
+  left twenty-one lines of data sharing 416 px. Sizing this way also keeps
+  `Syrian Arab Republic` whole — the published SVGs cut it off.
+- `small_multiples` lays out from a pixel budget, not from `subplots_adjust`
+  fractions: head, legend band, then per row a `PANEL_TITLE_PX` and a `PANEL_PX`,
+  `ROW_GAP_PX` between rows, and `FLOOR_PX` for the year labels. The fractions had
+  `hspace = 0.75` — three quarters of a panel's height spent on the gap — which
+  left every panel **180×90 px** on an 800 px figure. At that size a series reads
+  as a flat line whatever it does, and the year labels only fit turned on their
+  side. A panel is now a fixed **320×150 px** whatever the country count, the
+  years sit upright, and the y axis gets `MaxNLocator(4)` instead of just a floor
+  and a ceiling.
+- **The year labels stay upright because the count is measured.** How many fit
+  across one panel comes from `widest_label_px`, and the ticks are thinned to
+  that. A column of sideways years was the hardest thing to read on the old
+  figures.
 
-Two fixes worth not re-breaking:
+Three fixes worth not re-breaking:
 
 - **Shared axes invert once, not per axis.** Calling `invert_yaxis()` on each
   panel of a shared-y figure cancels itself on the second. `stacked_shares` uses
@@ -152,6 +167,12 @@ Two fixes worth not re-breaking:
 - **Shared x hides tick labels on every panel but the bottom row, and the bottom
   row is usually part empty.** `small_multiples` turns labels back on for the
   lowest *occupied* panel in each column.
+- **The shared legend is collected from every panel, not from the first one.**
+  Reading `get_legend_handles_labels()` off `axes[0][0]` drops a series from the
+  legend whenever the first country alphabetically does not happen to report it —
+  Iraq reports only one sex on several Labor indicators. The handles are gathered
+  across all panels and ordered by the `series_colors` dict, so the legend reads
+  Male, Female in house order rather than alphabetically.
 
 `readable_on()` picks the text colour for a number sitting on a fill **by
 measuring contrast**, not by a fixed lightness rule. A fixed rule is only correct
@@ -191,8 +212,22 @@ country that reported them. Population currently produces 22.
   summed from an exhaustive partition (Urban + Rural, or Nationals +
   Non-nationals) and the fact is recorded. Egypt has no total rows at all.
 - `drop_scale_outliers(factor=20)` — a point more than 20× off its own country's
-  median is a unit or typing error, not a fact. Catches Morocco's 2024 population
-  filed as `36,491` in thousands and Lebanon's 2022 as `100`.
+  median is a unit or typing error, not a fact. Catches Lebanon's 2022 population
+  filed as `100`. It used to catch Morocco's 2024 as `36,491` too; notebook 1 now
+  reads the `الاعداد بالالف` note on that column and scales it to `36,491,000` at
+  source, so the figure arrives correct instead of being dropped — which is the
+  better outcome, and why Population's findings went from 22 to 18.
+- `drop_impossible_percentages()` — a share cannot be more than all of it, so a
+  value above 100 in an indicator whose own name says `(percent)` is dropped.
+  Only that name is trusted: a rate per 1,000 women runs past 100 legitimately
+  and a growth rate goes negative legitimately, so neither is bounded. This
+  matters more than one wrong dot because `small_multiples` shares **one** y
+  scale across every panel: Egypt's single 110% occupation share stretched the
+  axis to 0–110 and flattened all fourteen countries onto the baseline. Algeria
+  trips it too, for a different reason — it files head-counts (1,744 … 8,250)
+  under a percent indicator, the same fault as the two Population `(%)`
+  indicators in CLAUDE.md's known issues. Reported one line per indicator and
+  country, not per point: per point it was 781 lines for Labor alone.
 - `drop_contradictory_sexes()` — where Male + Female misses its own reported
   total by more than `SEX_TOTAL_TOLERANCE = 2.0`%, **the whole country-year is
   dropped**. Nothing in the file says which of the two figures is sound, so

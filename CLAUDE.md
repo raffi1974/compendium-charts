@@ -39,11 +39,22 @@ and women that do not add up to their reported total.
 **Notebook 1 cleans the Value column and reports every change.** A number
 wrapped in a recognized unit phrase is scaled to match it: `بالالف` and its
 common typo `بالاف` both mean "in thousands", so `7845(الاعداد بالالف)` →
-`7845000`. A placeholder like `-` becomes blank. Wrapping text the pipeline
-does not recognize is just dropped, keeping only the bare number — which is
-exactly why every one of these is reported rather than quietly fixed: an
-unfamiliar phrase could carry a multiplier too, and only the country that
-filled in the cell can say for certain.
+`7845000`. A placeholder like `-` becomes blank, and so does a cell holding
+only spaces — which is not an empty cell, and otherwise survives every "is it
+blank" test to reach the charts as a value that cannot be plotted. A cell like
+`51.2+1.2` is read as the sum. Wrapping text the pipeline does not recognize is
+just dropped, keeping only the bare number — which is exactly why every one of
+these is reported rather than quietly fixed: an unfamiliar phrase could carry a
+multiplier too, and only the country that filled in the cell can say for certain.
+
+**A unit note describes the whole column it sits in, not the one cell it is
+written on.** Morocco's 2024 population is filed as `1444`, `1745`, `1815`, …
+with `الاعداد بالالف` typed into the first cell only. Scaling that one cell
+leaves it a thousand times *larger* than its own neighbours — worse than
+leaving it alone — so the multiplier is applied to every figure sharing that
+indicator, country and year, and the block is reported with the count of
+figures it moved. The scope is the year, because that same file has 2010–2022
+in whole units and only 2024 in thousands.
 
 Each notebook owns a numbered section and rewrites only its own, so the file
 always reflects the latest run of each step and stays in step order whatever
@@ -237,6 +248,12 @@ build one.
 - **Two Population indicators labelled "(%)" hold absolute head-counts** for
   eight countries each, with values up to 29,258,382. This accounts for 97% of
   the data-gaps report's implausible-value findings. Needs fixing at source.
+- **Labor has the same fault**: Algeria files head-counts (1,744 … 8,250) under
+  `Persons outside the labor force … by reason of activity (percent)`, and Egypt
+  reports one occupation share at 110%. Notebook 5's
+  `drop_impossible_percentages()` refuses anything above 100 in a `(percent)`
+  indicator and reports it per indicator and country, so Algeria simply does not
+  appear on that chart. Also needs fixing at source.
 - **13 country-year-sex cells where a reported total contradicts the sum of its
   own age bands**, some by three orders of magnitude. The sex-ratio calculation
   logs each one and uses the reported total, that being what the country stated.
