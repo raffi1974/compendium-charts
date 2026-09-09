@@ -37,11 +37,13 @@ happily pass through — a value orders of magnitude off its own series, or men
 and women that do not add up to their reported total.
 
 **Notebook 1 cleans the Value column and reports every change.** A number
-wrapped in text keeps only the number but multiplied by the arabic text meaning (`7845(الاعداد بالالف)` → `7845`), and a
-placeholder like `-` becomes blank. Dropping `الاعداد بالالف` also drops the
-fact that the figure is in thousands, which leaves it a thousand times smaller
-than its neighbours — which is exactly why each one is reported rather than
-quietly fixed.
+wrapped in a recognized unit phrase is scaled to match it: `بالالف` and its
+common typo `بالاف` both mean "in thousands", so `7845(الاعداد بالالف)` →
+`7845000`. A placeholder like `-` becomes blank. Wrapping text the pipeline
+does not recognize is just dropped, keeping only the bare number — which is
+exactly why every one of these is reported rather than quietly fixed: an
+unfamiliar phrase could carry a multiplier too, and only the country that
+filled in the cell can say for certain.
 
 Each notebook owns a numbered section and rewrites only its own, so the file
 always reflects the latest run of each step and stays in step order whatever
