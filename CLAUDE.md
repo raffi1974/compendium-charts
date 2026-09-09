@@ -11,6 +11,11 @@ them. Nothing in `data quality/` changes data.
 | 4 | `Compendium_4_Tabulations.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
 | 5 | `Compendium_5_Charts.ipynb` | `<Chapter>_EN.xlsx` | `<chapter>_charts\` — an SVG and a PNG per figure, `<chapter>_charts.xlsx`, `charts_index.csv`, `chart_data_findings.txt` |
 
+`<chapter>_charts.xlsx` lives only in `<chapter>_charts\`, beside the SVGs and
+PNGs it indexes. Nothing copies it into `merged_long_files\` — that folder is
+the long files' own, and a chart workbook there would be one more place for
+the two to drift apart.
+
 Every long file lives in **`merged_long_files\`**, one folder for both languages.
 
 **1 → 2 → 3 in that order**; each reads what the previous wrote. **4 and 5 are
