@@ -32,7 +32,7 @@ happily pass through — a value orders of magnitude off its own series, or men
 and women that do not add up to their reported total.
 
 **Notebook 1 cleans the Value column and reports every change.** A number
-wrapped in text keeps only the number (`7845(الاعداد بالالف)` → `7845`), and a
+wrapped in text keeps only the number but multiplied by the arabic text meaning (`7845(الاعداد بالالف)` → `7845`), and a
 placeholder like `-` becomes blank. Dropping `الاعداد بالالف` also drops the
 fact that the figure is in thousands, which leaves it a thousand times smaller
 than its neighbours — which is exactly why each one is reported rather than
@@ -75,6 +75,12 @@ on the questionnaires, contradiction checks on the final files) and
 repository root).
 Nothing there changes data — it only measures and reports. Run it after step 3, before building tabulations or charts on figures that
 have not been sanity-checked.
+
+**How the charts look is settled in `charts_design.md`**, beside notebook 5.
+Colours, fonts, the measured-layout rules, the data guards and the trade-offs
+behind each are recorded there with the numbers they were chosen on. Read it
+before changing anything visual — it exists so none of that has to be
+re-derived, and several of the odd-looking choices are load-bearing.
 
 Paths live outside this repo, under
 `C:\Users\RSHIRINI\OneDrive - United Nations\Desktop\DSS\`.
