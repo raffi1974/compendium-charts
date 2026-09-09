@@ -1,6 +1,7 @@
 # Arab Society Compendium — pipeline
 
-Five notebooks. Four are a chain; the fifth is a diagnostic.
+Five notebooks make the deliverables, and two more in `data quality/` check
+them. Nothing in `data quality/` changes data.
 
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
@@ -8,19 +9,27 @@ Five notebooks. Four are a chain; the fifth is a diagnostic.
 | 2 | `Compendium_2_New_Indicators.ipynb` | `<Chapter>_AR.xlsx` | the calculated rows, in Arabic, appended to it |
 | 3 | `Compendium_3_Translation.ipynb` | `<Chapter>_AR.xlsx` + `<Chapter>_EN_questionnaires.xlsx` | `<Chapter>_EN.xlsx` |
 | 4 | `Compendium_4_Tabulations.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
+| 5 | `Compendium_5_Charts.ipynb` | `<Chapter>_EN.xlsx` | `<chapter>_charts\` — an SVG and a PNG per figure, `<chapter>_charts.xlsx`, `charts_index.csv`, `chart_data_findings.txt` |
 
 Every long file lives in **`merged_long_files\`**, one folder for both languages.
 
-Run 1 → 2 → 3 → 4 in order; each reads what the previous wrote. Tabulation is
-last so it picks up the calculated indicators.
+**1 → 2 → 3 in that order**; each reads what the previous wrote. **4 and 5 are
+independent siblings**: both read the finished long files, neither needs the
+other, and either can be re-run alone. Both come after 3 so they pick up the
+calculated indicators.
 
-**All four notebooks record what they find wrong with the source data** in
+**Notebooks 1 to 4 record what they find wrong with the source data** in
 `pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 the sheets
 it could not read, the labels it could not match and every Value it had to
 correct; notebook 2 the contradictions in the figures; notebook 3 the values
 with no translation; notebook 4 the tabulations that came out wrong. Every
 record carries the country, indicator and year it came from, so a finding can be
 traced back to the cell.
+
+Notebook 5 keeps its own `chart_data_findings.txt` in each chart folder rather
+than a section of the shared log, because it refuses figures the other four
+happily pass through — a value orders of magnitude off its own series, or men
+and women that do not add up to their reported total.
 
 **Notebook 1 cleans the Value column and reports every change.** A number
 wrapped in text keeps only the number (`7845(الاعداد بالالف)` → `7845`), and a
@@ -64,8 +73,8 @@ matches nothing and quietly produces no rows.
 on the questionnaires, contradiction checks on the final files) and
 `Compendium_Data_Gaps.ipynb` (completeness, and the dashboard in `docs/` at the
 repository root).
-Nothing there changes data — it only measures and reports. Run it after step 3,
-before building tabulations on figures that have not been sanity-checked.
+Nothing there changes data — it only measures and reports. Run it after step 3, before building tabulations or charts on figures that
+have not been sanity-checked.
 
 Paths live outside this repo, under
 `C:\Users\RSHIRINI\OneDrive - United Nations\Desktop\DSS\`.
@@ -109,6 +118,65 @@ silently, and the run lists it under "term missing from the dictionary".
 keys.** A retyped string that differs by one invisible character (non-breaking
 space, different letter form) silently fails to match. Assert a couple of anchor
 rows before writing.
+
+## Running it
+
+Notebooks are executed cell by cell from `run_pipeline.py`, not opened in
+Jupyter. A run takes minutes and its progress bar has to stay readable while it
+goes.
+
+```bash
+PYTHONIOENCODING=utf-8 PYTHONUTF8=1 py -u run_pipeline.py 2 3 4 --only Population > run.log 2>&1
+```
+
+Then **poll the log** — never wait blind on a long run, and never hand a
+pipeline run to a subagent. `PYTHONUTF8=1` is not optional: the Arabic in the
+progress output kills the default Windows console encoding.
+
+`--only` overrides `CHAPTERS` straight after the cell whose id is `config`, so
+limiting a run to one chapter never means editing a notebook and forgetting to
+put it back. Repeat it for several chapters.
+
+Measured on Population, 389,075 rows — useful for telling a slow run from a hung
+one: notebook 2 about 2½ minutes, 3 about 3, 4 about 3¼. Most of it is Excel
+I/O; each notebook reads and rewrites an 18 MB file.
+
+## Where everything lives
+
+Nothing the pipeline reads or writes is inside this repo. Two roots, both under
+`C:\Users\RSHIRINI\OneDrive - United Nations\Desktop\DSS\`:
+
+```
+DATA COLLECTOR\
+├── datacollector_received_quest_AR\   the Arabic questionnaires
+│   └── Health\ Population\ Education\ Labor\ Poverty\ Housing\
+├── datacollector_received_quest_EN\   the English ones, same six chapters
+└── translation dict.xlsx              the dictionary
+
+COMPENDIUM-ARAB SOCIETY\
+├── merged_long_files\          <Chapter>_AR.xlsx, _EN.xlsx, _EN_questionnaires.xlsx
+├── tabulations\                <Chapter>_tabulations_<LANG>.xlsx
+├── <chapter>_charts\           the SVGs, PNGs, workbook, index and findings
+├── pipeline_inconsistencies.txt
+└── codes\                      this repo
+```
+
+`translation dict.xlsx` has four columns — `col_ar`, `val_ar`, `col_en`,
+`val_en` — plus `status`, which marks the rows the pipeline added. It is read
+**Arabic → English only**; there is no reverse map any more, and nothing should
+build one.
+
+## Where the data stands
+
+- **Population** is current: through all five notebooks since the reorder.
+  389,075 rows, 317 of them calculated, 41 tabulation sheets per language, 31
+  charts.
+- **Labor is half-rebuilt and should not be used.** `Labor_AR.xlsx` was rebuilt
+  on 8 September 2026, but `Labor_EN.xlsx` dates from the 3rd — before the
+  calculations moved ahead of the translation. It carries no calculated rows,
+  and the Labor tabulations and charts were built from it, so they do not
+  either. Re-run 1 → 5 on Labor before anyone reads those files.
+- **Health, Education, Poverty and Housing** have not been run at all.
 
 ## Conventions
 
@@ -184,5 +252,8 @@ rows before writing.
 - Everything is under OneDrive, including this repo. Sync has previously moved
   the git branch and made files appear to vanish. Prefer explicit verification
   over assuming a write landed.
-- Run notebooks by executing their cells from a script (`py -u`), polling a log
-  file for the progress bar. Do not use a subagent for pipeline runs.
+- `pandas`, `openpyxl`, and for notebook 5 `matplotlib` and `Pillow`.
+  `nbformat` is **not** installed — notebooks are edited as raw JSON, and any
+  script that rewrites one must compile every code cell before saving.
+- See **Running it** above for how to start a run. Never through Jupyter, never
+  through a subagent.
