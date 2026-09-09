@@ -213,7 +213,15 @@ build one.
   and the Labor tabulations were built from it, so they do not either. Its eight
   charts (6.1 to 6.8) were redrawn from that same stale file on 9 September and
   inherit the same gap. Re-run 1 → 5 on Labor before anyone reads any of it.
-- **Health, Education, Poverty and Housing** have not been run at all.
+- **Poverty** is current: through all five notebooks, run 9 September 2026.
+  8,757 rows, no calculated rows (Poverty carries none of notebook 2's
+  population-based indicators), 5 tabulation sheets per language, all 5 charts
+  (7.1 to 7.5). Two questionnaires have a genuine layout fault rather than a
+  missing cover tab: Qatar's `Poverty_4` has a source-citation table but no
+  response rows at all, and the United Arab Emirates' `Poverty_5` has its
+  data-table header cell blank instead of reading `index`. Both are skipped and
+  logged, not fixed — that's a source-file correction, not a code one.
+- **Health, Education and Housing** have not been run at all.
 
 ## Conventions
 
@@ -286,6 +294,17 @@ build one.
   internally consistent across nine years, so no guard here can tell a wrong
   measure from a real one, and the notebook refuses only what is provably
   impossible. It does stretch 2.1's axis to 16. Needs checking at source.
+- **Several Poverty countries file an implausibly low national poverty
+  headcount**: Jordan 0.07%, Lebanon 0.02%–0.9%, Qatar and the United Arab
+  Emirates 0.0% exactly. Nothing about these values is internally inconsistent
+  — each is one figure with no other year or series for that country to check
+  it against — so 7.1 draws them as reported rather than guessing which
+  countries meant a different number. Needs checking at source.
+- **Libya's 2022 Gini index is 0.30**, against every other country's 25–48 on
+  the same figure (7.3) — almost certainly filed as a fraction where every
+  other country filed index points. A single point with nothing to compare it
+  to cannot be told apart from a real value by any guard here. Needs fixing at
+  source.
 - **Two Health sheets use a legacy layout** and fail at `extract`:
   `Iraq health.xlsx` → `Iraq health - Health_4_a`, `jordan health.xlsx` →
   `Health_1_a`.
