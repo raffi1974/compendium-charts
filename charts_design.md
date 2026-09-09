@@ -13,7 +13,36 @@ picks up the merged questionnaire rows and the calculated indicators. It is
 independent of notebook 4 — neither needs the other.
 
 `CHAPTERS` at the top of the config cell picks what runs. It is currently
-`["Population"]`. Set it to `None` to chart every chapter found on disk.
+`["Population", "Labor"]` — the two chapters with long files. Set it to `None`
+to chart every chapter found on disk.
+
+## What is being copied
+
+The compendium's own figures, exported from the old plotly workbook, are the
+reference for every chart here:
+
+```
+COMPENDIUM-ARAB SOCIETY\old files\population old charts\
+    population\  housing\  health\  education\  labor\  poverty\
+```
+
+`OLD_CHARTS_PATH` in the config cell records that path. Nothing reads the folder
+at run time — every chapter set was read out of those SVGs by hand (the shape of
+each numbered figure, the countries on it, its unit and its axis range) and the
+path is kept so a figure drawn here can be checked against the one it replaces.
+The SVGs still carry their text as text, so `grep` finds a legend or an axis
+label without opening anything.
+
+Two of them were decoded from the bar geometry rather than from a label, and it
+is worth not redoing that: `2.6_early_marriage` runs Mauritania 36.6 per cent
+down to Tunisia 1.5, which identifies it as the UNICEF child-marriage series
+(women aged 20-24 married before 18), and `2.7_early_childbearing` is its
+companion. **Neither is a questionnaire indicator**, so neither is drawn today —
+`find_indicator()` reports the gap and the figure is skipped. The functions are
+written and will produce the figures the moment such an indicator reaches a long
+file. Filling them with the nearest thing to hand — a marital-status share of
+the whole female population — would print as the published figure and mean
+something else.
 
 ## What comes out
 
@@ -27,23 +56,56 @@ not rasterise SVG, so the picture *inside* a sheet is the PNG. The SVG beside it
 is the vector copy and the one to use anywhere that wants live text. There is no
 way around this from Python — don't spend time trying again.
 
-**Population** gets the numbered set the compendium prints — `1.1_pop_growth`,
-`1.2_pop_size`, `1.3_sex_comp_gcc`, `1.6_sex_ratio`, `1.7_pop_age_sex`,
-`1.8_fertility`, `1.9_life_exp`, `1.10_infant_mort`, `1.11_intl_migrant_gcc`,
-`1.12_intl_migrant`, `1.13_refugees` — plus one pyramid per country, 31 charts in
-all. **The numbering keeps its gaps on purpose**: no 1.4 or 1.5 was supplied to
-copy, so those numbers are left free and the files still line up with the figure
-numbers in the report. Don't close the gap.
+**Every chapter now gets the numbered set the compendium prints**, and the
+filenames are the published figure numbers, so a folder lines up with the report.
 
-**Every other chapter** is charted from what its indicators actually carry:
-`_trend` (a line per country) where there is a country total over time, `_by_sex`
-(a panel per country) where it is reported by sex, and `_<breakdown>` (stacked
-shares, latest year) where it splits into parts that sum to a whole.
+| chapter | figures | shapes used |
+|---|---|---|
+| Population | `1.1`–`1.13`, `2.1`–`2.7`, a pyramid per country | all six |
+| Housing | `3.1`–`3.7` | stacked shares, grouped bars, lines |
+| Health | `4.1`–`4.14` | lines, small multiples, grouped bars |
+| Education | `5.1`–`5.7` | small multiples, lines |
+| Labor | `6.1`–`6.8` | small multiples |
+| Poverty | `7.1`–`7.5` | lines, small multiples, grouped bars |
+
+**Population's numbering keeps its gaps on purpose**: no 1.4 or 1.5 was supplied
+to copy, so those numbers are left free and the files still line up with the
+figure numbers in the report. Don't close the gap.
+
+**Only Population and Labor have long files.** The Housing, Health, Education and
+Poverty sets are written from the published figures and from the indicator names
+in `old files\indicators.txt`, and are **unverified against real data** until
+those chapters are run. A mismatch surfaces as an `indicator missing` or
+`breakdown missing` line in that chapter's `chart_data_findings.txt` — read that
+first, then widen the pattern rather than pinning a new exact string.
+
+**Indicators are resolved by pattern, not by an exact name.** `find_indicator()`
+takes the report's wording and matches it against the chapter's own indicator
+names; `breakdown_column()` and `matching_values()` do the same for a column and
+for one slice of it. The questionnaires spell the same measure differently
+between chapters — and sometimes between two editions of one chapter — so a
+pinned string breaks on a stray double space and a pattern does not. Patterns are
+tried in order, exact wording first and a looser fallback behind it, and a
+pattern that matches nothing is reported and that one figure skipped.
+
+**The data-driven builder is now the fallback**, for a chapter with no published
+set. `ALSO_CHART_UNUSED_INDICATORS = True` in the config cell also runs it over
+whatever a published set never touched — useful while a chapter is being
+explored, noise in a deliverable. It works out what was touched from the source
+note each figure registers, so a chapter set that leaves its `source_note` blank
+will see its indicators charted twice.
+
+Three classifications in the Housing set are **judgements, not facts in the
+file**: `IMPROVED_WATER`, `IMPROVED_SANITATION` and `HAS_ELECTRICITY` decide
+which of a questionnaire's categories count towards 3.3, 3.4 and 3.5. Every
+category a list does not recognise is reported by name, so the first Housing run
+says exactly what it left out of the numerator. Check that finding against the
+questionnaire before those three figures are published.
 
 ## The theme
 
 Light, and not a matter of taste — every value was read back out of the published
-SVGs in `population old charts\population copy\`.
+SVGs in `OLD_CHARTS_PATH\population\` (see **What is being copied** above).
 
 | | value | |
 |---|---|---|
@@ -179,17 +241,35 @@ measuring contrast**, not by a fixed lightness rule. A fixed rule is only correc
 for one theme and silently inverts on the other — it did, when the theme moved
 from dark to light, and every number inside a stacked bar went invisible.
 
-## The five shapes
+## The six shapes
 
 Every chart is one of these, in `cell_primitives`:
 
 | | used by |
 |---|---|
-| `country_lines` | 1.1, 1.2, 1.6 — one line per country, legend right |
-| `small_multiples` | 1.8, 1.9, 1.10 — a panel per country, **one shared y scale** |
-| `stacked_shares` | 1.3, 1.7 — percentages that sum to 100 |
-| `ranked_bars` | 1.11 — one bar per country, longest on top, no legend |
+| `country_lines` | 1.1, 1.2, 1.6, 2.1–2.4, 3.6, 4.1–4.4, 7.1–7.3 — one line per country, legend right |
+| `small_multiples` | 1.8–1.10, 2.5, 4.5, 5.1–5.6, all of 6, 7.4 — a panel per country, **one shared y scale** |
+| `stacked_shares` | 1.3, 1.7, 3.1, 3.2 — percentages that sum to 100 |
+| `ranked_bars` | 1.11, 2.6 — one bar per country, longest on top, no legend |
+| `grouped_bars` | 3.3–3.5, 4.6–4.9, 7.5 — two to five bars per country |
 | `pyramid` | the country pyramids — male left, female right, one shared scale |
+
+`grouped_bars` is the newest and the only one that prints no figure on the bar:
+`ranked_bars` can, because it draws one series, and here two to five bars share a
+row and the numbers would collide at any width worth printing. The legend names
+the series and the exact figures go on the workbook sheet beneath the picture. It
+sizes itself the same measured way as everything else — `len(series) × 20 px` per
+country plus a 16 px gap, so a five-bar row gets two and a half times the height
+of a pair instead of both being squeezed into one fixed figure.
+
+Rows are ordered by `sort_by` where a caller names a series and by the row's mean
+otherwise, largest at the top. That ordering is the whole readability of the
+shape: there are no gridlines to count along, so a ranking is what lets a reader
+place a country without measuring.
+
+`run_jobs(chapter, jobs)` draws a set with every figure isolated — one missing
+indicator, or one breakdown not shaped the way the published figure assumed, must
+not take the other thirteen with it. Every chapter builder returns through it.
 
 `small_multiples` shares its y scale deliberately: on separate scales a country
 whose fertility moved 2.0 → 2.2 looks identical to one that moved 2 → 6.

@@ -100,6 +100,16 @@ behind each are recorded there with the numbers they were chosen on. Read it
 before changing anything visual — it exists so none of that has to be
 re-derived, and several of the odd-looking choices are load-bearing.
 
+**Every chapter's charts are copies of the figures the compendium prints**, and
+the originals are at
+`COMPENDIUM-ARAB SOCIETY\old files\population old charts\<chapter>\` — one
+folder of plotly SVGs per chapter, recorded in the notebook as
+`OLD_CHARTS_PATH`. Notebook 5 has a hand-written set per chapter numbered to
+match (`1.1`–`2.7` Population, `3.x` Housing, `4.x` Health, `5.x` Education,
+`6.x` Labor, `7.x` Poverty); the old data-driven builder is now only the
+fallback for a chapter with no such set. The SVGs keep their text as text, so a
+legend or an axis label can be read straight out of one with `grep`.
+
 Paths live outside this repo, under
 `C:\Users\RSHIRINI\OneDrive - United Nations\Desktop\DSS\`.
 
@@ -193,13 +203,16 @@ build one.
 ## Where the data stands
 
 - **Population** is current: through all five notebooks since the reorder.
-  389,075 rows, 317 of them calculated, 41 tabulation sheets per language, 31
-  charts.
+  389,075 rows, 317 of them calculated, 41 tabulation sheets per language, 36
+  charts — the 1.x set, 2.1 to 2.5, and a pyramid per country. 2.6 and 2.7 are
+  written but not drawn: no questionnaire reports child marriage or early
+  childbearing, so the figures appear the moment such an indicator does.
 - **Labor is half-rebuilt and should not be used.** `Labor_AR.xlsx` was rebuilt
   on 8 September 2026, but `Labor_EN.xlsx` dates from the 3rd — before the
   calculations moved ahead of the translation. It carries no calculated rows,
-  and the Labor tabulations and charts were built from it, so they do not
-  either. Re-run 1 → 5 on Labor before anyone reads those files.
+  and the Labor tabulations were built from it, so they do not either. Its eight
+  charts (6.1 to 6.8) were redrawn from that same stale file on 9 September and
+  inherit the same gap. Re-run 1 → 5 on Labor before anyone reads any of it.
 - **Health, Education, Poverty and Housing** have not been run at all.
 
 ## Conventions
@@ -262,6 +275,17 @@ build one.
   as 256, which counted every `كلا الجنسين` (both sexes) row as a missing
   male/female total - those were never candidates for a ratio, and 253 of the
   256 were that.
+- **Morocco's 2024 mean age at first marriage is 320 for men and 250 for
+  women** — an age nobody has. `chart_age_at_first_marriage()` drops it with a
+  `factor=2` scale guard and reports it, because on the one shared y scale of a
+  small-multiples figure two impossible points flatten all nineteen countries
+  onto the baseline. Needs fixing at source.
+- **Oman files an average household size of 15.3 to 16.4 from 2011 to 2019**,
+  dropping to 6.5 from 2022 — where every other country sits between 3.5 and 7,
+  and where the published figure 2.1 runs 4 to 8. It is not dropped: it is
+  internally consistent across nine years, so no guard here can tell a wrong
+  measure from a real one, and the notebook refuses only what is provably
+  impossible. It does stretch 2.1's axis to 16. Needs checking at source.
 - **Two Health sheets use a legacy layout** and fail at `extract`:
   `Iraq health.xlsx` → `Iraq health - Health_4_a`, `jordan health.xlsx` →
   `Health_1_a`.
