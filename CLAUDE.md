@@ -96,12 +96,23 @@ the Arabic file says. A name the dictionary cannot resolve is reported rather
 than silently passed through, because a calculation built on an unresolved name
 matches nothing and quietly produces no rows.
 
-**Checking the data lives in `data quality/`**, with its own `CLAUDE.md`. It holds `Compendium_Data_Quality.ipynb` (structural checks
-on the questionnaires, contradiction checks on the final files) and
-`Compendium_Data_Gaps.ipynb` (completeness, and the dashboard in `docs/` at the
-repository root).
-Nothing there changes data — it only measures and reports. Run it after step 3, before building tabulations or charts on figures that
-have not been sanity-checked.
+**Checking the data lives in `data quality/`**, with its own `CLAUDE.md`. It
+holds `Compendium_Data_Quality.ipynb` and `Compendium_Data_Gaps.ipynb`
+(completeness, and the dashboard in `docs/` at the repository root).
+
+`Compendium_Data_Quality.ipynb` reads the raw questionnaires - the same files
+notebook 1 reads - and writes one file, `data_quality_review.txt`: every label
+with no exact match in the dictionary, every Value cell `clean_one_value()`
+could not make sense of on its own, and (reporting only) every sheet broken
+enough to fail at read time. Open it, accept or edit each `CORRECTION:` line,
+save it, then tell Claude `apply data_quality_review.txt` - it writes your
+decisions into `translation dict.xlsx` and `value corrections.xlsx`, and the
+next pipeline run uses them directly instead of guessing. Run this **before**
+notebook 1, so a run starts with as few gaps as this can catch in advance.
+
+Nothing here changes data on its own - the checks only measure and report, and
+even the one file this notebook can change is changed by a person's own
+decision, read back from a file they saved themselves.
 
 **How the charts look is settled in `charts_design.md`**, beside notebook 5.
 Colours, fonts, the measured-layout rules, the data guards and the trade-offs
@@ -127,6 +138,14 @@ Paths live outside this repo, under
 **When the user asks to run the pipeline, treat closing dictionary gaps as part
 of the job**, not as a separate request to come back for. There are two kinds,
 and both must be closed before the run counts as finished.
+
+This is the *during-and-after* loop: gaps found while running notebooks 2 and
+3, closed by Claude's own judgement. The data quality notebook is the
+*before* loop - the same two kinds of gap, found by reading the raw
+questionnaires ahead of a run, closed by the person reading
+`data_quality_review.txt` rather than by Claude - and the two are meant to
+meet in the middle: the more that loop closes in advance, the fewer of these
+a real run turns up.
 
 ### Kind 1 — a value the questionnaires used
 
@@ -216,20 +235,31 @@ DATA COLLECTOR\
 ├── datacollector_received_quest_AR\   the Arabic questionnaires
 │   └── Health\ Population\ Education\ Labor\ Poverty\ Housing\
 ├── datacollector_received_quest_EN\   the English ones, same six chapters
-└── translation dict.xlsx              the dictionary
+├── translation dict.xlsx              the dictionary
+└── value corrections.xlsx             confirmed readings for malformed Value cells
 
 COMPENDIUM-ARAB SOCIETY\
 ├── merged_long_files\          <Chapter>_AR.xlsx, _EN.xlsx, _EN_questionnaires.xlsx
 ├── tabulations\                <Chapter>_tabulations_<LANG>.xlsx
 ├── <chapter>_charts\           the SVGs, PNGs, workbook, index and findings
 ├── pipeline_inconsistencies.txt
+├── data_quality_review.txt     written by data quality/Compendium_Data_Quality.ipynb
 └── codes\                      this repo
 ```
 
 `translation dict.xlsx` has four columns — `col_ar`, `val_ar`, `col_en`,
 `val_en` — plus `status`, which marks the rows the pipeline added. It is read
 **Arabic → English only**; there is no reverse map any more, and nothing should
-build one.
+build one. A row may carry `val_ar`/`val_en` both blank on purpose - that
+teaches a **column** name rather than a value, e.g. a raw sheet's mistyped
+header. `update_dictionary()` (notebook 3, and the data quality notebook's own
+copy) keeps both kinds; do not reintroduce a `dropna()` across all four
+columns, which silently discards the column-only rows.
+
+`value corrections.xlsx` has `chapter`, `raw_value`, `corrected_value`, plus
+`status` and `date` the same way. Written only by the data quality notebook's
+`apply_review()`, read by notebook 1's `clean_one_value()` - see **Things that
+look wrong but are deliberate** below.
 
 ## Where the data stands
 
@@ -294,9 +324,25 @@ build one.
 - **Merge keys are trimmed on both sides before merging.** `reshape_and_merge()`
   runs before `correct_with_dictionary()`, so an untrimmed key matched nothing
   and the row lost its citation silently.
+- **`clean_one_value()` checks `value corrections.xlsx` before its own
+  guesses, keyed on `(chapter, exact raw text)`.** A person confirms a reading
+  once, in the data quality notebook's review file, and every occurrence of
+  that same malformed text in that chapter is fixed the same way on every
+  future run - not just the one cell that happened to be reviewed.
 
 ## Known issues
 
+- **Yemen is not in the compendium for Education, Health, Housing, Labor or
+  Population.** Its five questionnaires sit directly under
+  `datacollector_received_quest_AR\yemen\`, one level above where
+  `discover_chapters()` looks - every other country's file is one level
+  deeper, inside the matching `<Chapter>\` folder. `yemen` and a second stray
+  folder, `country excel sheets` (two loose files, no chapter), both get
+  discovered as if they were chapters themselves whenever `CHAPTERS = None`,
+  which is the default in every notebook. Found running the data quality
+  notebook with `CHAPTERS = None`; not fixed, because it means moving the
+  user's source files rather than a code change. Move Yemen's five files each
+  into their proper chapter subfolder to pick them up.
 - **Two Population indicators labelled "(%)" hold absolute head-counts** for
   eight countries each, with values up to 29,258,382. This accounts for 97% of
   the data-gaps report's implausible-value findings. Needs fixing at source.
