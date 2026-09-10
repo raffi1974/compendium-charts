@@ -11,3 +11,7 @@ __pycache__/
 
 # Timestamped dictionary backups written by update_dictionary()
 translation dict backup *.xlsx
+
+# Generated report - no .xlsx has ever been committed here; regenerate with
+# Compendium_Data_Quality.ipynb Part 2 rather than tracking the binary
+data quality/data_gaps_report.xlsx

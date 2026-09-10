@@ -96,23 +96,33 @@ the Arabic file says. A name the dictionary cannot resolve is reported rather
 than silently passed through, because a calculation built on an unresolved name
 matches nothing and quietly produces no rows.
 
-**Checking the data lives in `data quality/`**, with its own `CLAUDE.md`. It
-holds `Compendium_Data_Quality.ipynb` and `Compendium_Data_Gaps.ipynb`
-(completeness, and the dashboard in `docs/` at the repository root).
+**Checking the data lives in `data quality/`**, with its own `CLAUDE.md`. One
+notebook, `Compendium_Data_Quality.ipynb`, in two parts that share nothing but
+a file.
 
-`Compendium_Data_Quality.ipynb` reads the raw questionnaires - the same files
-notebook 1 reads - and writes one file, `data_quality_review.txt`: every label
-with no exact match in the dictionary, every Value cell `clean_one_value()`
-could not make sense of on its own, and (reporting only) every sheet broken
-enough to fail at read time. Open it, accept or edit each `CORRECTION:` line,
-save it, then tell Claude `apply data_quality_review.txt` - it writes your
-decisions into `translation dict.xlsx` and `value corrections.xlsx`, and the
-next pipeline run uses them directly instead of guessing. Run this **before**
-notebook 1, so a run starts with as few gaps as this can catch in advance.
+**Part 1 reads the raw questionnaires** - the same files notebook 1 reads -
+and writes one file, `data_quality_review.txt`: every label with no exact
+match in the dictionary, every Value cell `clean_one_value()` could not make
+sense of on its own, and (reporting only) every sheet broken enough to fail at
+read time. Open it, accept or edit each `CORRECTION:` line, save it, then tell
+Claude `apply data_quality_review.txt` - it writes your decisions into
+`translation dict.xlsx` and `value corrections.xlsx`, and the next pipeline
+run uses them directly instead of guessing. Run this **before** notebook 1, so
+a run starts with as few gaps as this can catch in advance.
+
+**Part 2 reads the final `<Chapter>_EN.xlsx` files** and reports, per chapter:
+completeness (how many of the 17 expected years each indicator × country
+series actually carries, banded rather than averaged into one misleading
+number), and contradictions (a reported total against the sum of its own
+parts, year-on-year spikes, a percentage indicator holding absolute counts,
+percentages not summing to 100, implausible values, conflicting duplicate
+rows). Writes `data_gaps_report.xlsx` and regenerates the GitHub Pages
+dashboard's `docs/data.js`. Run this after step 3, before building
+tabulations or charts on figures that have not been sanity-checked.
 
 Nothing here changes data on its own - the checks only measure and report, and
-even the one file this notebook can change is changed by a person's own
-decision, read back from a file they saved themselves.
+the one file Part 1 can change is changed by a person's own decision, read
+back from a file they saved themselves.
 
 **How the charts look is settled in `charts_design.md`**, beside notebook 5.
 Colours, fonts, the measured-layout rules, the data guards and the trade-offs
