@@ -155,9 +155,32 @@ rows before writing.
 
 ## Running it
 
-Notebooks are executed cell by cell from `run_pipeline.py`, not opened in
-Jupyter. A run takes minutes and its progress bar has to stay readable while it
-goes.
+Two ways, and both are fine.
+
+### Running it yourself, in Jupyter or VS Code
+
+Open the notebook and run its cells top to bottom, same as any other notebook
+— nothing about these requires a special runner. To limit a run to one
+chapter, edit `CHAPTERS` in the cell whose id is `config`:
+
+```python
+CHAPTERS = ["Poverty"]      # instead of None
+```
+
+`None` means every chapter found on disk. Nothing resets this for you, so set
+it back to `None` (or to the chapter you actually want) before the next full
+run.
+
+### Running it through Claude
+
+Claude has no Jupyter kernel, so a notebook is run by reading its JSON and
+`exec`-ing each code cell's source into one namespace, in cell order — after
+the `config` cell has run, `CHAPTERS` is overridden in that namespace before
+the rest continue. `run_pipeline.py`, if it is in the repo, is exactly that,
+generalised and committed so it is not retyped every session. If it is not
+there, Claude writes the same ~15 lines as a scratch script instead — the
+technique does not depend on the file existing, only on a set of committed
+notebooks to read.
 
 ```bash
 PYTHONIOENCODING=utf-8 PYTHONUTF8=1 py -u run_pipeline.py 2 3 4 --only Population > run.log 2>&1
@@ -167,9 +190,8 @@ Then **poll the log** — never wait blind on a long run, and never hand a
 pipeline run to a subagent. `PYTHONUTF8=1` is not optional: the Arabic in the
 progress output kills the default Windows console encoding.
 
-`--only` overrides `CHAPTERS` straight after the cell whose id is `config`, so
-limiting a run to one chapter never means editing a notebook and forgetting to
-put it back. Repeat it for several chapters.
+`--only` overrides `CHAPTERS` the same way the manual edit above does. Repeat
+it for several chapters.
 
 Measured on Population, 389,075 rows — useful for telling a slow run from a hung
 one: notebook 2 about 2½ minutes, 3 about 3, 4 about 3¼. Most of it is Excel
@@ -328,5 +350,6 @@ build one.
 - `pandas`, `openpyxl`, and for notebook 5 `matplotlib` and `Pillow`.
   `nbformat` is **not** installed — notebooks are edited as raw JSON, and any
   script that rewrites one must compile every code cell before saving.
-- See **Running it** above for how to start a run. Never through Jupyter, never
-  through a subagent.
+- See **Running it** above for how to start a run either way. Claude's own
+  runs never go through Jupyter or a subagent - that's about what Claude can
+  do, not a rule for you.
