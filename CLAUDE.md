@@ -24,12 +24,21 @@ other, and either can be re-run alone. Both come after 3 so they pick up the
 calculated indicators.
 
 **Notebooks 1 to 4 record what they find wrong with the source data** in
-`pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 the sheets
-it could not read, the labels it could not match and every Value it had to
-correct; notebook 2 the contradictions in the figures; notebook 3 the values
-with no translation; notebook 4 the tabulations that came out wrong. Every
-record carries the country, indicator and year it came from, so a finding can be
-traced back to the cell.
+`pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 every
+column name and value it matched against the dictionary - corrected or not -
+and every Value it had to correct; notebook 2 the contradictions in the
+figures; notebook 3 the values with no translation; notebook 4 the
+tabulations that came out wrong. Every record carries the country, indicator
+and year it came from, so a finding can be traced back to the cell.
+
+**Every dictionary correction is logged, not only the ones the fuzzy matcher
+gives up on.** `correct_with_dictionary()` used to log a label only when
+nothing scored above `FUZZY_MATCH_CUTOFF`; a spelling it silently auto-fixed
+never appeared anywhere but the console. It now logs both - `column name
+corrected` / `value corrected` for the ones it fixed, `column name not in the
+dictionary` / `value not in the dictionary` for the ones it could not - so the
+full list of what changed in the source data is in one place, not split
+between a saved file and a scrollback nobody kept.
 
 Notebook 5 keeps its own `chart_data_findings.txt` in each chart folder rather
 than a section of the shared log, because it refuses figures the other four
