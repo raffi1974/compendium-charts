@@ -27,6 +27,7 @@ NOTEBOOKS = {
     "1": "Compendium_1_Long_Files.ipynb",
     "2": "Compendium_2_New_Indicators.ipynb",
     "3": "Compendium_3_Translation.ipynb",
+    "3b": "Compendium_3b_External_Data.ipynb",
     "4": "Compendium_4_Tabulations.ipynb",
     "5": "Compendium_5_Charts.ipynb",
 }
