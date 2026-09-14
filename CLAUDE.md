@@ -333,7 +333,14 @@ look wrong but are deliberate** below.
   tabulations_*.xlsx` and `housing_charts\` are both still sitting there from
   11 September, built from files that no longer exist - do not trust either
   until 1 → 5 is re-run and confirmed to still be there afterward.
-- **Education** has not been run at all.
+- **Education** is current: through 1 → 5 (3b a no-op - its `external data\Education\`
+  is empty), run 14 September 2026. 48,648 rows, no calculated rows (none of
+  notebook 2's population-based indicators), 10 tabulation sheets per language,
+  7 charts. 268 label corrections and 36 new Source citations closed on this
+  run - net-new statistical bodies: Iraq's Central Statistical Organisation,
+  Qatar's Planning and Statistics Authority, UNESCO Institute for Statistics
+  (UIS), and several ministries of education across the region.
+- **Health, Housing** - see their own bullets above; unchanged by this run.
 
 ## Conventions
 
