@@ -40,13 +40,27 @@ gap-filling loop it uses are in its own intro cell - read that before touching
 it, most of what looks arbitrary there is a finding from the real sample file,
 not a guess.
 
-**Notebooks 1 to 4 record what they find wrong with the source data** in
-`pipeline_inconsistencies.txt`, beside the codes folder. Notebook 1 every
-column name and value it matched against the dictionary - corrected or not -
-and every Value it had to correct; notebook 2 the contradictions in the
-figures; notebook 3 the values with no translation; notebook 4 the
-tabulations that came out wrong. Every record carries the country, indicator
-and year it came from, so a finding can be traced back to the cell.
+**Notebooks 1 to 4, and 3b where it ran, record what they find wrong with the
+source data** in **`pipeline_inconsistencies_<Chapter>.txt`, one file per
+chapter**, beside the codes folder - plus `pipeline_inconsistencies_general.txt`
+for the rare finding with no chapter of its own (a dictionary-level problem,
+not a source-data one). Notebook 1 every column name and value it matched
+against the dictionary - corrected or not - and every Value it had to correct;
+notebook 2 the contradictions in the figures; notebook 3 the values with no
+translation; 3b the sheets it could not read and the labels it needed an
+Arabic form for; notebook 4 the tabulations that came out wrong. Every record
+carries the country, indicator and year it came from, so a finding can be
+traced back to the cell.
+
+Each notebook still owns one named section (`### 1. LONG FILES ###`, and so
+on) and rewrites only that section **within its own chapter's file**, exactly
+as before - a chapter-scoped run has never overwritten another notebook's
+findings, but until this split it *did* overwrite another **chapter's**:
+running notebook 1 on Housing used to replace whatever notebook 1 had found
+running on Education the day before, silently, because the one shared file
+had no idea which chapter a section's findings belonged to. `save_inconsistencies()`
+takes `chapters=` explicitly now, so even a chapter with nothing wrong gets its
+own section correctly replaced with "Nothing found" rather than left stale.
 
 **Every dictionary correction is logged, not only the ones the fuzzy matcher
 gives up on.** `correct_with_dictionary()` used to log a label only when
@@ -192,8 +206,9 @@ silently, and the run lists it under "term missing from the dictionary".
 ### The loop, either kind
 
 1. Run the notebook.
-2. Read them from `pipeline_inconsistencies.txt` — no spreadsheet is written.
-   Each carries the country, indicator and year of an example row.
+2. Read them from that chapter's own `pipeline_inconsistencies_<Chapter>.txt` —
+   no spreadsheet is written. Each carries the country, indicator and year of
+   an example row.
 3. Translate them yourself. Use the official English name of a statistical body
    where one exists — search `translation dict.xlsx` first, so wording stays
    consistent with what is already there.
@@ -271,7 +286,8 @@ COMPENDIUM-ARAB SOCIETY\
 ├── merged_long_files\          <Chapter>_AR.xlsx, _EN.xlsx, _EN_questionnaires.xlsx
 ├── tabulations\                <Chapter>_tabulations_<LANG>.xlsx
 ├── <chapter>_charts\           the SVGs, PNGs, workbook, index and findings
-├── pipeline_inconsistencies.txt
+├── pipeline_inconsistencies_<Chapter>.txt   one per chapter, plus:
+├── pipeline_inconsistencies_general.txt     findings with no chapter of their own
 ├── data_quality_review.txt     written by data quality/Compendium_Data_Quality.ipynb
 └── codes\                      this repo
 ```

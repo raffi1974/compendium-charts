@@ -22,7 +22,7 @@ either can be run alone by running only its cells.
 ## Part 1 — the raw questionnaires, and the review-and-apply loop
 
 Reads every raw questionnaire - the same files notebook 1 reads - and writes
-one file, `data_quality_review.txt`, beside `pipeline_inconsistencies.txt`:
+one file, `data_quality_review.txt`, beside the per-chapter `pipeline_inconsistencies_<Chapter>.txt` files:
 
 1. **Labels not in the dictionary, exactly** - a column name or value with no
    exact match, in either language. Below `FUZZY_MATCH_CUTOFF` is deliberate:
