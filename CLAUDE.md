@@ -1,16 +1,16 @@
 # Arab Society Compendium — pipeline
 
-Five notebooks make the deliverables, and two more in `data quality/` check
+Six notebooks make the deliverables, and two more in `data quality/` check
 them. Nothing in `data quality/` changes data.
 
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
 | 1 | `Compendium_1_Long_Files.ipynb` | `datacollector_received_quest_<LANG>\<Chapter>\*.xlsx` | `<Chapter>_AR.xlsx`, and `<Chapter>_EN_questionnaires.xlsx` if English questionnaires exist |
 | 2 | `Compendium_2_New_Indicators.ipynb` | `<Chapter>_AR.xlsx` | the calculated rows, in Arabic, appended to it |
-| 3 | `Compendium_3_Translation.ipynb` | `<Chapter>_AR.xlsx` + `<Chapter>_EN_questionnaires.xlsx` | `<Chapter>_EN.xlsx` |
-| 3b | `Compendium_3b_External_Data.ipynb` | `DATA COLLECTOR\external data\<Chapter>\*.xlsx` | appends to `<Chapter>_EN.xlsx`, then `<Chapter>_AR.xlsx` |
-| 4 | `Compendium_4_Tabulations.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
-| 5 | `Compendium_5_Charts.ipynb` | `<Chapter>_EN.xlsx` | `<chapter>_charts\` — an SVG and a PNG per figure, `<chapter>_charts.xlsx`, `charts_index.csv`, `chart_data_findings.txt` |
+| 3 | `Compendium_3_External_Data.ipynb` | `DATA COLLECTOR\external data\<Chapter>\*.xlsx` | `<Chapter>_EN_external.xlsx`, plus a `*_reshaped.xlsx` questionnaire-layout copy beside each source file |
+| 4 | `Compendium_4_Translation.ipynb` | `<Chapter>_AR.xlsx` + `<Chapter>_EN_questionnaires.xlsx` + `<Chapter>_EN_external.xlsx` | `<Chapter>_EN.xlsx`; also appends external data's Arabic form to `<Chapter>_AR.xlsx` |
+| 5 | `Compendium_5_Tabulations.ipynb` | `<Chapter>_EN.xlsx`, `<Chapter>_AR.xlsx` | `tabulations\<Chapter>_tabulations_<LANG>.xlsx` |
+| 6 | `Compendium_6_Charts.ipynb` | `<Chapter>_EN.xlsx` | `<chapter>_charts\` — an SVG and a PNG per figure, `<chapter>_charts.xlsx`, `charts_index.csv`, `chart_data_findings.txt` |
 
 `<chapter>_charts.xlsx` lives only in `<chapter>_charts\`, beside the SVGs and
 PNGs it indexes. Nothing copies it into `merged_long_files\` — that folder is
@@ -19,38 +19,44 @@ the two to drift apart.
 
 Every long file lives in **`merged_long_files\`**, one folder for both languages.
 
-**1 → 2 → 3 in that order**; each reads what the previous wrote. **3b is
-optional and sits after 3** — these files are already in English, so there is
-nothing to translate on the way in, only the small set of labels (a country, an
-indicator, a citation) that need an Arabic form for the first time. **4 and 5
-are independent siblings**: both read the finished long files, neither needs
-the other, and either can be re-run alone. Both come after 3 (and 3b, where it
-ran) so they pick up the calculated indicators and anything external.
+**1 → 2 → 3 → 4 in that order**; each reads what the previous wrote. 3 is
+optional in effect — it only has anything to do if a chapter has an
+`external data\<Chapter>\` folder — but always sits between 2 and 4, so 4 can
+fold in whatever 3 found on the same run. **5 and 6 are independent
+siblings**: both read the finished long files, neither needs the other, and
+either can be re-run alone. Both come after 4 so they pick up the calculated
+indicators and anything external.
 
-**3b reads published indicator tables that never went through a
+**Notebook 3 reads published indicator tables that never went through a
 questionnaire** — one folder per chapter under `DATA COLLECTOR\external
 data\<Chapter>\`. Nothing about their layout is assumed: the one real file
 used to build this had six sheets in three different header shapes, worked
-out by reading the actual file rather than guessing at a spec, and a sheet it
-cannot confidently read is refused and logged, never guessed at. Every row it
-adds is marked `Data Origin` = `External` (blank for everything else) - not in
-notebook 4's `ROW_COLUMNS` or `BREAKDOWN_COLUMNS`, so tabulations already
-ignore it without anything there having to change. Full design and the
-gap-filling loop it uses are in its own intro cell - read that before touching
-it, most of what looks arbitrary there is a finding from the real sample file,
-not a guess.
+out by reading the actual file rather than guessing at a spec, and a column
+it cannot confidently name is left out and reported - without taking the
+rest of that sheet's good columns down with it, which refusing the whole
+sheet used to do. Follows the `reshape-external-data-questionnaire-layout`
+skill: alongside the rows it writes to `<Chapter>_EN_external.xlsx`, it saves
+a reshaped, questionnaire-layout copy of each source file beside the source
+file, for a person to check straight against the original. **Notebook 3 does
+none of the translation itself** - it only extracts and reshapes; notebook 4
+is the one place that decides every value's language, in both directions.
+Full design and this split's reasoning are in notebook 3's own intro cell -
+read that before touching it, most of what looks arbitrary there is a
+finding from the real sample file, not a guess.
 
-**Notebooks 1 to 4, and 3b where it ran, record what they find wrong with the
-source data** in **`pipeline_inconsistencies_<Chapter>.txt`, one file per
-chapter**, beside the codes folder - plus `pipeline_inconsistencies_general.txt`
-for the rare finding with no chapter of its own (a dictionary-level problem,
-not a source-data one). Notebook 1 every column name and value it matched
-against the dictionary - corrected or not - and every Value it had to correct;
-notebook 2 the contradictions in the figures; notebook 3 the values with no
-translation; 3b the sheets it could not read and the labels it needed an
-Arabic form for; notebook 4 the tabulations that came out wrong. Every record
-carries the country, indicator and year it came from, so a finding can be
-traced back to the cell.
+**Notebooks 1 to 5 record what they find wrong with the source data** in
+**`pipeline_inconsistencies_<Chapter>.txt`, one file per chapter**, beside
+the codes folder - plus `pipeline_inconsistencies_general.txt` for the rare
+finding with no chapter of its own (a dictionary-level problem, not a
+source-data one). Notebook 1 every column name and value it matched against
+the dictionary - corrected or not - and every Value it had to correct;
+notebook 2 the contradictions in the figures; notebook 3 the sheets or
+columns it could not confidently read; notebook 4 the values with no
+translation - section `4. TRANSLATION` for the normal Arabic → English
+direction, `4b. EXTERNAL DATA` for external data's own English → Arabic
+gaps; notebook 5 the tabulations that came out wrong. Every record carries
+the country, indicator and year it came from, so a finding can be traced
+back to the cell.
 
 Each notebook still owns one named section (`### 1. LONG FILES ###`, and so
 on) and rewrites only that section **within its own chapter's file**, exactly
@@ -71,8 +77,8 @@ dictionary` / `value not in the dictionary` for the ones it could not - so the
 full list of what changed in the source data is in one place, not split
 between a saved file and a scrollback nobody kept.
 
-Notebook 5 keeps its own `chart_data_findings.txt` in each chart folder rather
-than a section of the shared log, because it refuses figures the other four
+Notebook 6 keeps its own `chart_data_findings.txt` in each chart folder rather
+than a section of the shared log, because it refuses figures the other five
 happily pass through — a value orders of magnitude off its own series, or men
 and women that do not add up to their reported total.
 
@@ -102,9 +108,9 @@ order they ran in. These are findings about the questionnaires, not the code, so
 they outlive the run and can go back to the country that reported them.
 
 **Why `<Chapter>_EN_questionnaires.xlsx` has its own name.** Notebook 1's
-English output and notebook 3's are different files — one is English
+English output and notebook 4's are different files — one is English
 questionnaires made long, the other is the translated Arabic with those rows
-appended. Sharing `<Chapter>_EN.xlsx` would make notebook 3 read and overwrite
+appended. Sharing `<Chapter>_EN.xlsx` would make notebook 4 read and overwrite
 the same file, so a second run would append its own output to itself and
 duplicate every row.
 
@@ -148,14 +154,14 @@ number), and contradictions (a reported total against the sum of its own
 parts, year-on-year spikes, a percentage indicator holding absolute counts,
 percentages not summing to 100, implausible values, conflicting duplicate
 rows). Writes `data_gaps_report.xlsx` and regenerates the GitHub Pages
-dashboard's `docs/data.js`. Run this after step 3, before building
+dashboard's `docs/data.js`. Run this after step 4, before building
 tabulations or charts on figures that have not been sanity-checked.
 
 Nothing here changes data on its own - the checks only measure and report, and
 the one file Part 1 can change is changed by a person's own decision, read
 back from a file they saved themselves.
 
-**How the charts look is settled in `charts_design.md`**, beside notebook 5.
+**How the charts look is settled in `charts_design.md`**, beside notebook 6.
 Colours, fonts, the measured-layout rules, the data guards and the trade-offs
 behind each are recorded there with the numbers they were chosen on. Read it
 before changing anything visual — it exists so none of that has to be
@@ -165,7 +171,7 @@ re-derived, and several of the odd-looking choices are load-bearing.
 the originals are at
 `COMPENDIUM-ARAB SOCIETY\old files\population old charts\<chapter>\` — one
 folder of plotly SVGs per chapter, recorded in the notebook as
-`OLD_CHARTS_PATH`. Notebook 5 has a hand-written set per chapter numbered to
+`OLD_CHARTS_PATH`. Notebook 6 has a hand-written set per chapter numbered to
 match (`1.1`–`2.7` Population, `3.x` Housing, `4.x` Health, `5.x` Education,
 `6.x` Labor, `7.x` Poverty); the old data-driven builder is now only the
 fallback for a chapter with no such set. The SVGs keep their text as text, so a
@@ -181,7 +187,7 @@ of the job**, not as a separate request to come back for. There are two kinds,
 and both must be closed before the run counts as finished.
 
 This is the *during-and-after* loop: gaps found while running notebooks 2 and
-3, closed by Claude's own judgement. The data quality notebook is the
+4, closed by Claude's own judgement. The data quality notebook is the
 *before* loop - the same two kinds of gap, found by reading the raw
 questionnaires ahead of a run, closed by the person reading
 `data_quality_review.txt` rather than by Claude - and the two are meant to
@@ -190,7 +196,7 @@ a real run turns up.
 
 ### Kind 1 — a value the questionnaires used
 
-A country writes a survey name the dictionary has not seen. Notebook 3 finds
+A country writes a survey name the dictionary has not seen. Notebook 4 finds
 these by comparing the table before and after translation: a value with no entry
 passes through unchanged, and that is the gap. What is missing is always the
 English side now that everything travels Arabic → English.
@@ -203,7 +209,20 @@ questionnaire**. Notebook 2 needs their *Arabic* to write the rows at all, so a
 missing one is caught immediately: `term()` reports it instead of falling back
 silently, and the run lists it under "term missing from the dictionary".
 
-### The loop, either kind
+### Kind 3 — external data introduces a new English-origin value
+
+Notebook 3's `<Chapter>_EN_external.xlsx` output is genuinely new English
+content with no Arabic form anywhere yet - a country, an indicator, a
+citation. Notebook 4's own external-data-folding section finds these the
+same way (`find_external_gaps()`), but travelling the other direction -
+English → Arabic, not Arabic → English - since this content started in
+English and the rule is still to give a value an Arabic form for the first
+time, never to back-translate anything already correct. Closed the same way
+as the other two kinds; see notebook 4's own intro cell for the two-part run
+this needs (append first, review `EXTERNAL_GAPS`, `update_dictionary()`,
+then `apply_external_gaps()`).
+
+### The loop, any kind
 
 1. Run the notebook.
 2. Read them from that chapter's own `pipeline_inconsistencies_<Chapter>.txt` —
@@ -253,19 +272,22 @@ technique does not depend on the file existing, only on a set of committed
 notebooks to read.
 
 ```bash
-PYTHONIOENCODING=utf-8 PYTHONUTF8=1 py -u run_pipeline.py 2 3 4 --only Population > run.log 2>&1
+PYTHONIOENCODING=utf-8 PYTHONUTF8=1 py -u run_pipeline.py 2 4 5 --only Population > run.log 2>&1
 ```
 
-Then **poll the log** — never wait blind on a long run, and never hand a
-pipeline run to a subagent. `PYTHONUTF8=1` is not optional: the Arabic in the
-progress output kills the default Windows console encoding.
+Then **poll the log** — never wait blind on a long run. `PYTHONUTF8=1` is not
+optional: the Arabic in the progress output kills the default Windows
+console encoding.
 
 `--only` overrides `CHAPTERS` the same way the manual edit above does. Repeat
 it for several chapters.
 
 Measured on Population, 389,075 rows — useful for telling a slow run from a hung
-one: notebook 2 about 2½ minutes, 3 about 3, 4 about 3¼. Most of it is Excel
-I/O; each notebook reads and rewrites an 18 MB file.
+one: notebook 2 about 2½ minutes, 4 about 3, 5 about 3¼. Most of it is Excel
+I/O; each notebook reads and rewrites an 18 MB file. Notebook 3 has no
+measurement here - it only has anything to do on a chapter with an
+`external data\<Chapter>\` folder, and how long it takes depends entirely on
+how many sheets are in there.
 
 ## Where everything lives
 
@@ -278,12 +300,13 @@ DATA COLLECTOR\
 │   └── Health\ Population\ Education\ Labor\ Poverty\ Housing\
 ├── datacollector_received_quest_EN\   the English ones, same six chapters
 ├── external data\                     published tables with no questionnaire behind them
-│   └── Health\ Population\ Education\ Labor\ Poverty\ Housing\    - read by 3b
+│   └── Health\ Population\ Education\ Labor\ Poverty\ Housing\    - read by notebook 3
+│       └── *_reshaped.xlsx            notebook 3's questionnaire-layout copy, beside each source file
 ├── translation dict.xlsx              the dictionary
 └── value corrections.xlsx             confirmed readings for malformed Value cells
 
 COMPENDIUM-ARAB SOCIETY\
-├── merged_long_files\          <Chapter>_AR.xlsx, _EN.xlsx, _EN_questionnaires.xlsx
+├── merged_long_files\          <Chapter>_AR.xlsx, _EN.xlsx, _EN_questionnaires.xlsx, _EN_external.xlsx
 ├── tabulations\                <Chapter>_tabulations_<LANG>.xlsx
 ├── <chapter>_charts\           the SVGs, PNGs, workbook, index and findings
 ├── pipeline_inconsistencies_<Chapter>.txt   one per chapter, plus:
@@ -294,17 +317,17 @@ COMPENDIUM-ARAB SOCIETY\
 
 `translation dict.xlsx` has four columns — `col_ar`, `val_ar`, `col_en`,
 `val_en` — plus `status`, which marks the rows the pipeline added. Read
-**Arabic → English only** everywhere except notebook 3b, which is not a
-back-translation of anything: it is giving a brand new English value, from a
-file with no Arabic form anywhere in it, an Arabic form for the first time,
-the same as notebook 3 already does for calculated labels. Nothing should
-build a reverse map of the *existing*, already-correct English content - that
-is the rule this was never an exception to. A row may carry `val_ar`/`val_en`
-both blank on purpose - that teaches a **column** name rather than a value,
-e.g. a raw sheet's mistyped header. `update_dictionary()` (notebook 3, and its
-own copy in the data quality notebook and in 3b) keeps both kinds; do not
-reintroduce a `dropna()` across all four columns, which silently discards the
-column-only rows.
+**Arabic → English only** everywhere except notebook 4's external-data
+section, which is not a back-translation of anything: it is giving a brand
+new English value, from a file with no Arabic form anywhere in it, an Arabic
+form for the first time, the same as notebook 4 already does for calculated
+labels. Nothing should build a reverse map of the *existing*, already-correct
+English content - that is the rule this was never an exception to. A row may
+carry `val_ar`/`val_en` both blank on purpose - that teaches a **column**
+name rather than a value, e.g. a raw sheet's mistyped header.
+`update_dictionary()` (notebook 4, and its own copy in the data quality
+notebook) keeps both kinds; do not reintroduce a `dropna()` across all four
+columns, which silently discards the column-only rows.
 
 `value corrections.xlsx` has `chapter`, `raw_value`, `corrected_value`, plus
 `status` and `date` the same way. Written only by the data quality notebook's
@@ -313,7 +336,13 @@ look wrong but are deliberate** below.
 
 ## Where the data stands
 
-- **Population** is current: through all five notebooks since the reorder.
+The notebooks were renumbered and notebook 3b's translation step moved into
+notebook 4 on 18 September 2026 (see git history) - every bullet below about
+a run from before that date describes what the OLD numbering produced, not
+the new one. The data itself did not move or change in that rename; only a
+future re-run will go through the new split.
+
+- **Population** is current: through the full pipeline since the reorder.
   389,075 rows, 317 of them calculated, 41 tabulation sheets per language, 36
   charts — the 1.x set, 2.1 to 2.5, and a pyramid per country. 2.6 and 2.7 are
   written but not drawn: no questionnaire reports child marriage or early
@@ -324,8 +353,8 @@ look wrong but are deliberate** below.
   documented here earlier is resolved. Its eight charts (6.1 to 6.8) were
   redrawn from the current file on 10 September and are correct.
   `tabulations\Labor_tabulations_*.xlsx` are still from 3-4 September, built
-  from the old file - re-run notebook 4 on Labor before reading those two.
-- **Poverty** is current: through all five notebooks, run 9 September 2026.
+  from the old file - re-run notebook 5 on Labor before reading those two.
+- **Poverty** is current: through the full pipeline, run 9 September 2026.
   8,757 rows, no calculated rows (Poverty carries none of notebook 2's
   population-based indicators), 5 tabulation sheets per language, all 5 charts
   (7.1 to 7.5). Two questionnaires have a genuine layout fault rather than a
@@ -335,28 +364,35 @@ look wrong but are deliberate** below.
   logged, not fixed — that's a source-file correction, not a code one.
 - **Health has external data only, no questionnaire content.** Notebook 1 has
   never run on it - `Health_AR.xlsx` and `Health_EN.xlsx` exist only because
-  3b created them, 6,788 rows each, all `Data Origin = External`, from the one
-  sample file in `external data\Health\`: disability, health personnel and
-  facility density, obesity, and expenditure, 22 countries, 2000-2023.
-  28 tabulation sheets per language, run 13 September 2026. A real notebook
-  1 → 5 run on Health will fold questionnaire rows in alongside these, not
+  the external-data step created them, most recently re-run 18 September 2026
+  against an updated source file: 6,788 rows, all `Data Origin = External`,
+  from the one sample file in `external data\Health\`: disability, health
+  personnel and facility density, obesity, and expenditure, 22 countries,
+  2000-2023. That run used the OLD, single 3b notebook (whole-sheet refusal,
+  translation built in) - sheet `4.10` was skipped entirely, losing 781
+  otherwise-good figures to one stray, unheaded value elsewhere in the same
+  sheet. The new notebook 3 fixes exactly this (leaves out just the bad
+  column, keeps the rest) but has not been re-run against the real file yet -
+  do that before trusting Health's row count as final. 28 tabulation sheets
+  per language, from the 13 September run. A real notebook 1 → 6 run on
+  Health will fold questionnaire rows in alongside the external ones, not
   replace them.
-- **Housing's long files are gone again, orphaned tabulations and charts left
-  behind.** Built once (11 September), lost once already to the same
-  disappearing-file pattern documented below, rebuilt, then gone again within
-  minutes with no code of this repo's own doing - `merged_long_files\Housing_
-  AR.xlsx` / `_EN.xlsx` do not exist right now. `tabulations\Housing_
-  tabulations_*.xlsx` and `housing_charts\` are both still sitting there from
-  11 September, built from files that no longer exist - do not trust either
-  until 1 → 5 is re-run and confirmed to still be there afterward.
-- **Education** is current: through 1 → 5 (3b a no-op - its `external data\Education\`
-  is empty), run 14 September 2026. 48,648 rows, no calculated rows (none of
-  notebook 2's population-based indicators), 10 tabulation sheets per language,
-  7 charts. 268 label corrections and 36 new Source citations closed on this
-  run - net-new statistical bodies: Iraq's Central Statistical Organisation,
-  Qatar's Planning and Statistics Authority, UNESCO Institute for Statistics
-  (UIS), and several ministries of education across the region.
-- **Health, Housing** - see their own bullets above; unchanged by this run.
+- **Housing** is current: through the full pipeline, run 17 September 2026.
+  58,689 rows from 22 questionnaires, no calculated rows (Housing carries
+  none of notebook 2's population-based indicators), 8 tabulation sheets per
+  language, 4 of its 5 hand-written charts (3.2, 3.5, 3.6, 3.7). 3.3 and 3.4
+  are both correctly refused, not missing by accident: neither drinking-water
+  nor sanitation access is reported split by area (urban/rural) anywhere in
+  the current data, and both charts need that split. No external data -
+  `external data\Housing\` is empty.
+- **Education** is current: through the full pipeline (notebook 3 a no-op -
+  its `external data\Education\` is empty), run 14 September 2026. 48,648
+  rows, no calculated rows (none of notebook 2's population-based
+  indicators), 10 tabulation sheets per language, 7 charts. 268 label
+  corrections and 36 new Source citations closed on this run - net-new
+  statistical bodies: Iraq's Central Statistical Organisation, Qatar's
+  Planning and Statistics Authority, UNESCO Institute for Statistics (UIS),
+  and several ministries of education across the region.
 
 ## Conventions
 
@@ -380,15 +416,16 @@ look wrong but are deliberate** below.
   spaces as thousand separators.
 - **Source is translated but never fuzzy-matched.** Two citations differing by
   one digit score high enough to overwrite each other.
-- **3b's Indicator resolution never fuzzy-matches either, for a related but
-  distinct reason.** A long, templated sentence carries its topic in a small
-  fraction of the string: the external Health sample's "Government expenditure
-  on health as % of Gross Domestic Product (GDP)" scored 0.628 - over the
-  0.6 cutoff - against the dictionary's *education*-spending indicator, on
-  shared wording alone. Measured, not guessed; see `NEVER_FUZZY_MATCHED` in
-  3b's config cell. Country and Sex keep fuzzy matching there - proven useful,
-  not just harmless, the same run reused "Comoros Islands" for the sample
-  file's bare "Comoros" rather than filing a second, inconsistent country.
+- **Notebook 4's Indicator resolution for external data never fuzzy-matches
+  either, for a related but distinct reason.** A long, templated sentence
+  carries its topic in a small fraction of the string: the external Health
+  sample's "Government expenditure on health as % of Gross Domestic Product
+  (GDP)" scored 0.628 - over the 0.6 cutoff - against the dictionary's
+  *education*-spending indicator, on shared wording alone. Measured, not
+  guessed; see `NEVER_FUZZY_MATCHED` in its own `extdict` cell. Country and
+  Sex keep fuzzy matching there - proven useful, not just harmless, the same
+  run reused "Comoros Islands" for the sample file's bare "Comoros" rather
+  than filing a second, inconsistent country.
 - **Missing dimension values render as `(not specified)`, never blank.** The
   tabulation layout blanks a repeated label to mean "same as above", so a blank
   would silently absorb a row into the group above it.
@@ -431,7 +468,7 @@ look wrong but are deliberate** below.
   the data-gaps report's implausible-value findings. Needs fixing at source.
 - **Labor has the same fault**: Algeria files head-counts (1,744 … 8,250) under
   `Persons outside the labor force … by reason of activity (percent)`, and Egypt
-  reports one occupation share at 110%. Notebook 5's
+  reports one occupation share at 110%. Notebook 6's
   `drop_impossible_percentages()` refuses anything above 100 in a `(percent)`
   indicator and reports it per indicator and country, so Algeria simply does not
   appear on that chart. Also needs fixing at source.
@@ -468,6 +505,15 @@ look wrong but are deliberate** below.
 - **Two Health sheets use a legacy layout** and fail at `extract`:
   `Iraq health.xlsx` → `Iraq health - Health_4_a`, `jordan health.xlsx` →
   `Health_1_a`.
+- **Health's external sample file, sheet `4.10`, has a stray value with no
+  header anywhere above it** (Syrian Arab Republic, 2023, one cell one column
+  too far right). This used to cost the whole sheet - 781 otherwise-good
+  figures across all 22 countries - before notebook 3 was changed to leave
+  out just that one column instead. The same sheet's "Number of beds per
+  1000" and "population" columns read as two genuinely separate figures, not
+  one header wrapped across two cells - the population column's values match
+  the countries' real populations - but "Number of beds per 1000" alone reads
+  as an incomplete sentence either way. Worth a source check regardless.
 - **43 English terms have more than one Arabic spelling.** Harmless now that
   nothing is back-translated — the dictionary is only ever read Arabic →
   English, and several Arabic spellings mapping to one English term is exactly
@@ -485,14 +531,16 @@ look wrong but are deliberate** below.
 - Everything is under OneDrive, including this repo. Sync has previously moved
   the git branch and made files appear to vanish. Prefer explicit verification
   over assuming a write landed - and re-verify a few minutes later, not just
-  immediately after writing: `merged_long_files\Housing_AR.xlsx` and `_EN.xlsx`
-  have now vanished, present and confirmed one call and gone the next with no
-  code here responsible, three separate times (10-11 September). A file
-  existing right after a run is not the same as it still existing five minutes
-  on.
-- `pandas`, `openpyxl`, and for notebook 5 `matplotlib` and `Pillow`.
+  immediately after writing. `merged_long_files\Housing_AR.xlsx` and `_EN.xlsx`
+  disappeared and reappeared several times in September before it turned out
+  at least one of those was the user's own deletion, not OneDrive - a
+  reminder that a surprising disappearance is worth asking about before
+  assuming it is a sync bug. Housing has been stable since it was rebuilt on
+  17 September - see **Where the data stands**.
+- `pandas`, `openpyxl`, and for notebook 6 `matplotlib` and `Pillow`.
   `nbformat` is **not** installed — notebooks are edited as raw JSON, and any
   script that rewrites one must compile every code cell before saving.
 - See **Running it** above for how to start a run either way. Claude's own
-  runs never go through Jupyter or a subagent - that's about what Claude can
-  do, not a rule for you.
+  runs never go through Jupyter - that's about what Claude can do, not a
+  rule for you. A pipeline run can go through Claude directly or through the
+  matching subagent in `.claude/agents/`, one per notebook.

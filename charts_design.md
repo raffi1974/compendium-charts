@@ -1,6 +1,6 @@
 # Charts — how they are built and why
 
-Everything behind `Compendium_5_Charts.ipynb`. Read this before changing how a
+Everything behind `Compendium_6_Charts.ipynb`. Read this before changing how a
 chart looks: it records what was measured and what was chosen, so none of it has
 to be worked out twice.
 
@@ -8,9 +8,9 @@ to be worked out twice.
 merged_long_files\<Chapter>_EN.xlsx   ->   <chapter>_charts\
 ```
 
-Run it after notebook 3. It reads the same long files notebook 4 does, so it
+Run it after notebook 4. It reads the same long files notebook 5 does, so it
 picks up the merged questionnaire rows and the calculated indicators. It is
-independent of notebook 4 — neither needs the other.
+independent of notebook 5 — neither needs the other.
 
 `CHAPTERS` at the top of the config cell picks what runs. It is currently
 `["Population", "Labor"]` — the two chapters with long files. Set it to `None`
@@ -285,7 +285,7 @@ written to `chart_data_findings.txt`. These are findings about the
 questionnaires, not the code, so they outlive the run and can go back to the
 country that reported them. Population currently produces 22.
 
-- `to_number()` — the same parser as notebook 3. Only 337 of 33,968 population
+- `to_number()` — the same parser as notebook 4. Only 337 of 33,968 population
   cells are numeric; the rest are text like `' 701 956 '` with spaces as
   thousand separators.
 - `total_or_derived()` — where a country has no `Area Total` row, the total is

@@ -41,9 +41,9 @@ yet and this notebook has nothing to read.
    the like), not something any questionnaire ever wrote.
 2. If it lists anything to close, follow CLAUDE.md's "Filling dictionary
    gaps" loop (Kind 2). Notebook 2 does not carry its own
-   `update_dictionary()` — get a working one by executing notebook 3's cells
+   `update_dictionary()` — get a working one by executing notebook 4's cells
    up to and including its `gaps` cell into a fresh namespace, without
-   running notebook 3's own slow main loop:
+   running notebook 4's own slow main loop:
 
    ```python
    import json
@@ -61,7 +61,7 @@ yet and this notebook has nothing to read.
                break
        return namespace
 
-   update_dictionary = load_up_to("Compendium_3_Translation.ipynb", "gaps")["update_dictionary"]
+   update_dictionary = load_up_to("Compendium_4_Translation.ipynb", "gaps")["update_dictionary"]
    update_dictionary(filled)   # filled: DataFrame with col_ar, val_ar, col_en, val_en
    ```
 

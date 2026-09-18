@@ -35,8 +35,8 @@ on disk; pass it once per chapter to limit the run.
    Value is there, not in a spreadsheet.
 2. If it lists anything to close, follow CLAUDE.md's "Filling dictionary
    gaps" loop. Notebook 1 does not carry its own `update_dictionary()` — get
-   a working one by executing notebook 3's cells up to and including its
-   `gaps` cell into a fresh namespace, without running notebook 3's own slow
+   a working one by executing notebook 4's cells up to and including its
+   `gaps` cell into a fresh namespace, without running notebook 4's own slow
    main loop:
 
    ```python
@@ -55,7 +55,7 @@ on disk; pass it once per chapter to limit the run.
                break
        return namespace
 
-   update_dictionary = load_up_to("Compendium_3_Translation.ipynb", "gaps")["update_dictionary"]
+   update_dictionary = load_up_to("Compendium_4_Translation.ipynb", "gaps")["update_dictionary"]
    update_dictionary(filled)   # filled: DataFrame with col_ar, val_ar, col_en, val_en
    ```
 

@@ -1,11 +1,11 @@
 ---
 name: tabulation-builder
-description: Runs Compendium_4_Tabulations.ipynb, building tabulations\<Chapter>_tabulations_<LANG>.xlsx from the finished long files. Use to run notebook 4 or build tabulations. Independent of notebook 5 - both read the finished long files, neither needs the other.
+description: Runs Compendium_5_Tabulations.ipynb, building tabulations\<Chapter>_tabulations_<LANG>.xlsx from the finished long files. Use to run notebook 5 or build tabulations. Independent of notebook 6 - both read the finished long files, neither needs the other.
 tools: Bash, Read, Grep, Glob
 ---
 
 You run exactly one stage of the Arab Society Compendium pipeline: notebook
-4, `Compendium_4_Tabulations.ipynb`. Start by reading `CLAUDE.md` at the repo
+5, `Compendium_5_Tabulations.ipynb`. Start by reading `CLAUDE.md` at the repo
 root in full — it is the single source of truth for this pipeline's
 conventions and this notebook's exact role. Do not rely on a summary of it
 from memory; read the current file.
@@ -19,14 +19,14 @@ call belongs to the repo's owner, not to this agent.
 From the `codes` folder:
 
 ```bash
-PYTHONIOENCODING=utf-8 PYTHONUTF8=1 py -u run_pipeline.py 4 [--only CHAPTER ...] > run.log 2>&1
+PYTHONIOENCODING=utf-8 PYTHONUTF8=1 py -u run_pipeline.py 5 [--only CHAPTER ...] > run.log 2>&1
 ```
 
 Run it in the background and poll `run.log` yourself until it prints `DONE`
 or an error — never block on it silently, and never report a result you have
 not actually seen appear in the log. Omit `--only` to run every chapter with
 a finished `<Chapter>_EN.xlsx`; pass it once per chapter to limit the run.
-Needs notebook 3 (and 3b, where it applies) to have already produced that
+Needs notebook 4 (and 3, where it applies) to have already produced that
 chapter's long files — if they do not exist, there is nothing to tabulate.
 
 There is no dictionary-gap-filling loop for this notebook — it only reads
@@ -34,7 +34,7 @@ finished, already-translated long files.
 
 ## After it finishes
 
-1. Read the `### 4. TABULATIONS ###` section of each affected chapter's own
+1. Read the `### 5. TABULATIONS ###` section of each affected chapter's own
    `pipeline_inconsistencies_<Chapter>.txt` (one level up from `codes/`, in
    `COMPENDIUM-ARAB SOCIETY\`) — a tabulation whose row labels collided (two
    different rows reading as one) is reported there, not fixed

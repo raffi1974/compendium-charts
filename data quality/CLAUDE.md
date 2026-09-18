@@ -39,7 +39,7 @@ suggestion where there is one. A person edits the file directly - accept,
 retype, or `SKIP` - saves it, and tells Claude `apply <file>`. `apply_review()`
 re-reads that exact file and writes the decisions to `translation dict.xlsx`
 (labels) and `value corrections.xlsx` (values, in `DATA COLLECTOR\`) - both
-idempotent and backed up first, the same pattern as notebook 3's
+idempotent and backed up first, the same pattern as notebook 4's
 `update_dictionary()`. Nothing is written by any other path.
 
 **`CHAPTERS = None` picks up every folder `discover_chapters()` finds**,

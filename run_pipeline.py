@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 r"""Run the pipeline notebooks without Jupyter.
 
-    py -u run_pipeline.py 1 2 3 4 5
-    py -u run_pipeline.py 2 3 4 --only Population
-    py -u run_pipeline.py 5 --only Population --only Labor
+    py -u run_pipeline.py 1 2 3 4 5 6
+    py -u run_pipeline.py 2 4 5 --only Population
+    py -u run_pipeline.py 6 --only Population --only Labor
 
 A run takes minutes and its progress bar has to stay readable while it goes, so
 the notebooks are executed cell by cell from here and the output redirected to a
@@ -26,10 +26,10 @@ CODES = Path(__file__).resolve().parent
 NOTEBOOKS = {
     "1": "Compendium_1_Long_Files.ipynb",
     "2": "Compendium_2_New_Indicators.ipynb",
-    "3": "Compendium_3_Translation.ipynb",
-    "3b": "Compendium_3b_External_Data.ipynb",
-    "4": "Compendium_4_Tabulations.ipynb",
-    "5": "Compendium_5_Charts.ipynb",
+    "3": "Compendium_3_External_Data.ipynb",
+    "4": "Compendium_4_Translation.ipynb",
+    "5": "Compendium_5_Tabulations.ipynb",
+    "6": "Compendium_6_Charts.ipynb",
 }
 
 
