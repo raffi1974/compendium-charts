@@ -380,19 +380,25 @@ future re-run will go through the new split.
 - **Housing** is current: through the full pipeline, run 17 September 2026.
   58,689 rows from 22 questionnaires, no calculated rows (Housing carries
   none of notebook 2's population-based indicators), 8 tabulation sheets per
-  language, 4 of its 5 hand-written charts (3.2, 3.5, 3.6, 3.7). 3.3 and 3.4
-  are both correctly refused, not missing by accident: neither drinking-water
-  nor sanitation access is reported split by area (urban/rural) anywhere in
-  the current data, and both charts need that split. No external data -
+  language. All 7 hand-written charts draw (3.1-3.7) - country coverage
+  improved sharply after the chart-logic fixes of 22 September (see **Things
+  that look wrong but are deliberate** below and `charts_design.md`'s own
+  "data guards" section), which stopped excluding a country from a share
+  chart for an incomplete report: 3.1 went from 1 country to 11, 3.3 and 3.4
+  from not drawing at all to 5 and 6, 3.5 from 1 to 7. Charts have not been
+  re-run since the `total_slice()` fix specifically, which touches some of
+  the same charts and may improve them further. No external data -
   `external data\Housing\` is empty.
 - **Education** is current: through the full pipeline (notebook 3 a no-op -
   its `external data\Education\` is empty), run 14 September 2026. 48,648
   rows, no calculated rows (none of notebook 2's population-based
-  indicators), 10 tabulation sheets per language, 7 charts. 268 label
-  corrections and 36 new Source citations closed on this run - net-new
-  statistical bodies: Iraq's Central Statistical Organisation, Qatar's
-  Planning and Statistics Authority, UNESCO Institute for Statistics (UIS),
-  and several ministries of education across the region.
+  indicators), 10 tabulation sheets per language, 7 charts (5.1-5.7). 268
+  label corrections and 36 new Source citations closed on the 14 September
+  run - net-new statistical bodies: Iraq's Central Statistical Organisation,
+  Qatar's Planning and Statistics Authority, UNESCO Institute for Statistics
+  (UIS), and several ministries of education across the region. Charts
+  rebuilt 22 September 2026 after the `total_slice()` fix: the pupil-teacher
+  ratio charts (5.5, 5.6) went from 1 country (Bahrain) to 15.
 
 ## Conventions
 
@@ -449,6 +455,28 @@ future re-run will go through the new split.
   once, in the data quality notebook's review file, and every occurrence of
   that same malformed text in that chapter is fixed the same way on every
   future run - not just the one cell that happened to be reviewed.
+- **A share/breakdown chart (notebook 6) never excludes a country for an
+  incomplete report or a total that does not sum to 100 - it charts exactly
+  what was reported and logs the rest as a finding instead.** Most countries
+  only report the categories they have any of at all, leaving the rest a
+  silent zero rather than an explicit one - Bahrain's housing-type report is
+  two categories summing to exactly 100, the other six never written down -
+  so requiring every category before charting a country used to drop nearly
+  everyone. `stacked_shares()`'s x-axis widens to fit a country whose
+  reported categories sum past 100 (Qatar's housing-type report sums to
+  200 - looks like doubled rows) rather than clipping it invisibly at 100.
+  Full reasoning and the numbers it was measured on are in
+  `charts_design.md`'s "data guards" section.
+- **`total_slice()` (notebook 6) treats a blank breakdown column as its own
+  total, not only an explicit label like `Nationality Total`.** Different
+  countries use different conventions for the same thing - Bahrain is the
+  only country that writes `Nationality Total` on its pupil-teacher ratio,
+  every other country just leaves Nationality blank - and recognising only
+  the explicit label meant every country using the blank convention was
+  silently dropped the moment any country used the other one. Checked across
+  all six chapters' current data: no country reports a figure both ways at
+  once, so this creates no double-counted total today, but the explicit
+  label wins over a blank duplicate if that ever changes.
 
 ## Known issues
 

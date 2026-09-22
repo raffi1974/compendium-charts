@@ -320,6 +320,29 @@ country that reported them. Population currently produces 22.
   deliberately excluded from `BREAKDOWN_COLUMNS`**. Labor's rates carry
   overlapping bands (15+, 15-24, 15-64, 25+) with no `Age Total`, so stacking
   them was meaningless; excluding the column took Labor from 19 charts to 29.
+- `total_slice()` treats a blank breakdown column as its own total, not only
+  an explicit label like `Nationality Total`. Different countries use
+  different conventions for the same thing — Bahrain is the only country
+  that writes `Nationality Total` on its pupil-teacher ratio, every other
+  country just leaves Nationality blank — and recognising only the explicit
+  label meant that the moment any country used it, every country using the
+  other convention was silently dropped: Bahrain was the sole survivor on
+  both pupil-teacher charts. Checked across all six chapters' current data
+  first: no country reports a figure both ways at once, so this creates no
+  double-counted total today, but the explicit label wins over a blank
+  duplicate if that ever changes.
+- `latest_breakdown()` never excludes a country for an incomplete report or a
+  total that does not sum to 100 — it charts exactly what was reported, for
+  that country's own latest year, and logs the rest as a finding instead.
+  Requiring every category before charting a country used to drop nearly
+  everyone: most countries only report the categories they have any of at
+  all, leaving the rest a silent zero rather than an explicit one — Bahrain's
+  housing-type report is two categories summing to exactly 100, the other
+  six never written down. `stacked_shares()`'s x-axis widens to fit rather
+  than clipping a country whose reported categories sum past 100 at the 100
+  line — Qatar's housing-type report sums to 200 (looks like doubled rows)
+  and now draws as a bar running to 200, visibly wrong, rather than being cut
+  off invisibly at 100.
 
 ## The chart data on each sheet
 
