@@ -152,19 +152,20 @@
   parts of one notebook, sharing nothing but a file:
   - **Part 1 is the pipeline's first step, and gates it** — see the bullet
     near the top of this file. It scans the raw questionnaires and
-    `external data\<Chapter>\`, and writes `data_quality_review.txt` (labels
-    the dictionary can't match, Value cells `clean_one_value()` can't parse)
-    for a person to edit and Claude to `apply`, plus one brief, read-only
+    `external data\<Chapter>\`, and writes one read-only
     `Data quality issues before pipeline execution_<Chapter>.txt` per
-    chapter — now including a sheet or column notebook 3 would refuse, found
-    the same way notebook 3 finds it, structural-only (external data has no
-    fixed layout to fuzzy-match labels against).
+    chapter — labels the dictionary can't match, Value cells
+    `clean_one_value()` can't parse, structural problems, and now a sheet or
+    column notebook 3 would refuse (found the same way notebook 3 finds it,
+    structural-only — external data has no fixed layout to fuzzy-match
+    labels against). This is Part 1's only output; a person corrects
+    whatever it calls for directly, in the source file, and tells Claude to
+    resume.
   - **Part 2** reads the finished `<Chapter>_EN.xlsx` files after notebook 4
     and writes `data_gaps_report.xlsx` plus the GitHub Pages dashboard's
     `docs/data.js` — completeness and contradictions across the whole
     finished series.
-  - Neither changes data on its own; Part 1's one write only happens from a
-    person's own saved decision.
+  - Neither part changes data — both only measure and report.
   - Details, fields and known caveats: `data quality/CLAUDE.md`.
 - **How the charts look is settled in `charts_design.md`**, beside notebook
   6 — colours, fonts, layout rules, data guards, and the trade-offs each was
@@ -196,8 +197,9 @@
   - The data quality notebook's Part 1 is the *before* loop, and now the
     pipeline's literal first step — the same two kinds, found by reading raw
     questionnaires and `external data\<Chapter>\` ahead of a run, closed by
-    a person via `data_quality_review.txt`, with the run stopped until they
-    do.
+    a person directly (editing the source questionnaire, `translation
+    dict.xlsx`, or `value corrections.xlsx` — there is no intermediate file
+    to apply), with the run stopped until they do.
   - The two are meant to meet in the middle: the more the before-loop
     closes, the fewer the resumed run turns up.
 
@@ -256,7 +258,8 @@
 
 Two ways, and both are fine. Either way, a full run starts with
 `data quality/Compendium_Data_Quality.ipynb`'s Part 1 and stops there —
-review its findings, apply what needs applying, then resume with notebook 1.
+review its findings, correct whatever they call for directly, then resume
+with notebook 1.
 
 ### Running it yourself, in Jupyter or VS Code
 
@@ -325,8 +328,7 @@ COMPENDIUM-ARAB SOCIETY\
 ├── pipeline_changes_general.txt              same, with no chapter of its own
 ├── need manual intervention_<Chapter>.txt    what a resumed run left alone, and why
 ├── need manual intervention_general.txt      same, with no chapter of its own
-├── data_quality_review.txt     written by data quality/Compendium_Data_Quality.ipynb, Part 1
-├── Data quality issues before pipeline execution_<Chapter>.txt   also Part 1, one per chapter - now covers external data too
+├── Data quality issues before pipeline execution_<Chapter>.txt   Part 1's only output, one per chapter
 └── codes\                      this repo
 ```
 
@@ -341,19 +343,20 @@ COMPENDIUM-ARAB SOCIETY\
     English content — that is the rule this was never an exception to.
   - A row may carry `val_ar`/`val_en` both blank on purpose — that teaches a
     **column** name rather than a value, e.g. a raw sheet's mistyped header.
-  - `update_dictionary()` (notebook 4, and its own copy in the data quality
-    notebook) keeps both kinds; do not reintroduce a `dropna()` across all
-    four columns, which silently discards the column-only rows.
-  - Notebook 4's copy takes an optional `chapter=` and, when given, logs
-    every row it actually adds to that chapter's `pipeline_changes_
-    <Chapter>.txt` as `dictionary entry added`. The data quality notebook's
-    own copy does not — its dictionary writes go through `apply_review()`
-    instead, which already reports its own outcome inline.
+  - `update_dictionary()` (notebook 4) keeps both kinds; do not reintroduce
+    a `dropna()` across all four columns, which silently discards the
+    column-only rows.
+  - Takes an optional `chapter=` and, when given, logs every row it
+    actually adds to that chapter's `pipeline_changes_<Chapter>.txt` as
+    `dictionary entry added`.
+  - **Edited directly by a person for a Part 1 finding** — there is no
+    notebook-driven path from "Part 1 found a label" to a dictionary row
+    anymore; see `data quality/CLAUDE.md`.
 - `value corrections.xlsx` has `chapter`, `raw_value`, `corrected_value`,
   plus `status` and `date` the same way.
-  - Written only by the data quality notebook's `apply_review()`, read by
-    notebook 1's `clean_one_value()` — see **Things that look wrong but are
-    deliberate** below.
+  - Read by notebook 1's `clean_one_value()` — see **Things that look wrong
+    but are deliberate** below. Edited directly by a person, the same as
+    `translation dict.xlsx` above — nothing writes it automatically.
 
 ## Where the data stands
 
