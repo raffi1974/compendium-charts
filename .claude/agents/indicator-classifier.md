@@ -34,7 +34,7 @@ yet and this notebook has nothing to read.
 ## After it finishes
 
 1. Read the `### 2. NEW INDICATORS ###` section of each affected chapter's
-   own `pipeline_inconsistencies_<Chapter>.txt` (one level up from `codes/`,
+   own `need manual intervention_<Chapter>.txt` (one level up from `codes/`,
    in `COMPENDIUM-ARAB SOCIETY\`). What appears here is a term `term()` could
    not resolve to an Arabic label — a gap invented by this notebook's own
    calculations (`Sex ratio, 2010-2025 (per 100 females)`, `<15 years`, and
@@ -62,14 +62,16 @@ yet and this notebook has nothing to read.
        return namespace
 
    update_dictionary = load_up_to("Compendium_4_Translation.ipynb", "gaps")["update_dictionary"]
-   update_dictionary(filled)   # filled: DataFrame with col_ar, val_ar, col_en, val_en
+   update_dictionary(filled, chapter="<Chapter>")   # filled: DataFrame with col_ar, val_ar, col_en, val_en
    ```
 
-   These are invented labels, not something a country wrote, so translate
-   them yourself directly (check `translation dict.xlsx` first so wording
-   stays consistent with what is already there), attach by position, never
-   by retyping the Arabic/English keys, then re-run notebook 2 and confirm
-   the section is empty.
+   Passing `chapter` logs every row actually added to that chapter's own
+   `pipeline_changes_<Chapter>.txt` as `dictionary entry added`. These are
+   invented labels, not something a country wrote, so translate them
+   yourself directly (check `translation dict.xlsx` first so wording stays
+   consistent with what is already there), attach by position, never by
+   retyping the Arabic/English keys, then re-run notebook 2 and confirm
+   `need manual intervention_<Chapter>.txt`'s section is empty.
 3. Report: rows calculated per chapter, contradictions notebook 2 found
    between a reported total and its own age bands, gaps you closed and what
    you translated them to, and anything you were not confident enough to

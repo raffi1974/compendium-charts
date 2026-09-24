@@ -42,7 +42,7 @@ never automatic, on purpose, the same as the main gap-filling loop.
 ## After the main translation pass
 
 1. Read the `### 4. TRANSLATION ###` section of each affected chapter's own
-   `pipeline_inconsistencies_<Chapter>.txt` (one level up from `codes/`, in
+   `need manual intervention_<Chapter>.txt` (one level up from `codes/`, in
    `COMPENDIUM-ARAB SOCIETY\`) — every Arabic value with no dictionary entry
    is there. This is the authoritative source for Kind 1 gaps (a value a
    questionnaire used that the dictionary has not seen), found by comparing
@@ -70,13 +70,15 @@ never automatic, on purpose, the same as the main gap-filling loop.
        return namespace
 
    update_dictionary = load_up_to("Compendium_4_Translation.ipynb", "gaps")["update_dictionary"]
-   update_dictionary(filled)   # filled: DataFrame with col_ar, val_ar, col_en, val_en
+   update_dictionary(filled, chapter="<Chapter>")   # filled: DataFrame with col_ar, val_ar, col_en, val_en
    ```
 
-   Translate each gap yourself, using the official English name of a
-   statistical body where one exists (search `translation dict.xlsx` first),
-   attach by position, never by retyping the Arabic/English keys, then
-   re-run notebook 4 and confirm the section is empty.
+   Passing `chapter` logs every row actually added to that chapter's own
+   `pipeline_changes_<Chapter>.txt` as `dictionary entry added`. Translate
+   each gap yourself, using the official English name of a statistical body
+   where one exists (search `translation dict.xlsx` first), attach by
+   position, never by retyping the Arabic/English keys, then re-run notebook
+   4 and confirm `need manual intervention_<Chapter>.txt`'s section is empty.
 3. Report: rows translated per chapter, how many were appended straight from
    an English questionnaire rather than translated, gaps you closed and what
    you translated them to, and anything you were not confident enough to
@@ -89,7 +91,7 @@ Only relevant for a chapter with a `<Chapter>_EN_external.xlsx` — notebook
 own log already says so.
 
 1. Read the `### 4b. EXTERNAL DATA ###` section of the same
-   `pipeline_inconsistencies_<Chapter>.txt` files — every English value from
+   `need manual intervention_<Chapter>.txt` files — every English value from
    notebook 3 with no Arabic form yet is there (`EXTERNAL_GAPS` in the
    notebook's own namespace after the run). This is genuinely new
    English-origin content, so the direction is reversed from Kind 1: give it

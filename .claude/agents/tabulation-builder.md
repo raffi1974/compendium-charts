@@ -35,7 +35,7 @@ finished, already-translated long files.
 ## After it finishes
 
 1. Read the `### 5. TABULATIONS ###` section of each affected chapter's own
-   `pipeline_inconsistencies_<Chapter>.txt` (one level up from `codes/`, in
+   `need manual intervention_<Chapter>.txt` (one level up from `codes/`, in
    `COMPENDIUM-ARAB SOCIETY\`) — a tabulation whose row labels collided (two
    different rows reading as one) is reported there, not fixed
    automatically. A finding here means going back to the long file that

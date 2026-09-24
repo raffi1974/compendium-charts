@@ -1,7 +1,8 @@
 # Arab Society Compendium — pipeline
 
-- Six notebooks make the deliverables, and two more in `data quality/` check
-  them. Nothing in `data quality/` changes data.
+- Six notebooks make the deliverables. `data quality/`'s Part 1 runs first
+  and gates them; its Part 2 checks the finished result afterward. Nothing
+  in `data quality/` changes data on its own.
 
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
@@ -18,7 +19,21 @@
     copy there would just be one more place for the two to drift apart.
 - Every long file lives in **`merged_long_files\`**, one folder for both
   languages.
-- **1 → 2 → 3 → 4 in order**; each reads what the previous wrote.
+- **`data quality/Compendium_Data_Quality.ipynb`'s Part 1 runs before all
+  six, and gates them.** It checks the raw questionnaires and
+  `external data\<Chapter>\`, writes its findings to text files, and the
+  pipeline stops there — notebook 1 does not run — until a person has
+  reviewed those findings, made whatever corrections they call for, and
+  told Claude to resume.
+  - Not row 0 in the table above — it lives in `data quality/`, keeps its
+    own name, and is documented in full in `data quality/CLAUDE.md` — but it
+    is the first thing that runs, every time, including for a "run the
+    pipeline" request with no other qualifier.
+  - **Do not run notebook 1 to satisfy a pipeline request until this gate
+    has cleared.** If it is unclear whether it already has, ask rather than
+    assume.
+- **1 → 2 → 3 → 4 in order**, after the quality gate; each reads what the
+  previous wrote.
   - 3 only has anything to do when a chapter has an
     `external data\<Chapter>\` folder, but always sits between 2 and 4 so 4
     can fold in whatever 3 found.
@@ -40,40 +55,52 @@
     decides every value's language, both directions.
   - Read notebook 3's own intro cell before changing it — most of what
     looks arbitrary there is a finding from the real file, not a guess.
-- **Notebooks 1–5 record what they find wrong with the source data**, one
-  file per chapter: `pipeline_inconsistencies_<Chapter>.txt`, beside the
-  codes folder, plus `pipeline_inconsistencies_general.txt` for a
-  dictionary-level finding with no chapter of its own.
-  - Notebook 1 logs every column/value match against the dictionary
-    (corrected or not) and every Value it corrected.
+- **Notebooks 1–5 record what they find wrong with the source data**, split
+  by what happened to it into two files per chapter, beside the codes
+  folder: `pipeline_changes_<Chapter>.txt` for everything a resumed run
+  fixed, inferred, or added to the dictionary on its own, and
+  `need manual intervention_<Chapter>.txt` for everything it left alone and
+  why — plus a `_general` pair for a dictionary-level finding with no
+  chapter of its own.
+  - Which file a finding lands in is decided once, by its own `kind`, in
+    `save_inconsistencies()`'s `CHANGE_KINDS` set — not worked out by each
+    notebook. A `kind` nobody has classified as a change yet defaults to
+    manual intervention, on purpose, so a new one surfaces for a person to
+    see rather than silently reading as "already handled".
+  - Notebook 1 logs every column/value match against the dictionary — a fix
+    to `pipeline_changes_<Chapter>.txt`, a miss to
+    `need manual intervention_<Chapter>.txt` — and every Value it corrected.
   - Notebook 2 logs contradictions in the calculated figures.
   - Notebook 3 logs sheets/columns it couldn't confidently read.
   - Notebook 4 logs values with no translation — `4. TRANSLATION` for
     Arabic → English, `4b. EXTERNAL DATA` for external data's own
-    English → Arabic gaps.
+    English → Arabic gaps — and every row `update_dictionary()` actually
+    adds, as `dictionary entry added`.
   - Notebook 5 logs tabulations that came out wrong.
   - Every record carries the country, indicator and year, so a finding
     traces back to the cell.
   - These are findings about the questionnaires, not the code — they outlive
     the run and can go back to the country that reported them.
 - Each notebook owns one named section (`### 1. LONG FILES ###`, and so on)
-  and rewrites only that section **within its own chapter's file**.
+  and rewrites only that section **within its own chapter's pair of
+  files**.
   - A chapter-scoped run has never overwritten another notebook's findings,
     but before this split it did overwrite another **chapter's**: running
     notebook 1 on Housing silently replaced what it had found on Education
     the day before, because one shared file didn't track which chapter a
     section belonged to.
   - `save_inconsistencies()` now takes `chapters=` explicitly, so even a
-    clean chapter gets its section replaced with "Nothing found" instead of
-    left stale.
+    clean chapter gets both files' sections replaced with "Nothing found"
+    instead of left stale.
 - **Every dictionary correction is logged, not only the ones the fuzzy
   matcher gives up on.**
   - `correct_with_dictionary()` used to log a label only when nothing scored
     above `FUZZY_MATCH_CUTOFF` — a silently auto-fixed spelling never
     appeared anywhere but the console.
-  - It now logs both: `column name corrected` / `value corrected` for fixes,
-    `column name not in the dictionary` / `value not in the dictionary` for
-    misses — the full list of source-data changes lives in one place.
+  - It now logs both: `column name corrected` / `value corrected` for fixes
+    (into `pipeline_changes_<Chapter>.txt`), `column name not in the
+    dictionary` / `value not in the dictionary` for misses (into
+    `need manual intervention_<Chapter>.txt`).
 - Notebook 6 keeps its own `chart_data_findings.txt` per chart folder rather
   than a shared-log section, because it refuses figures the other five pass
   through — a value orders of magnitude off its own series, or sexes that
@@ -123,12 +150,15 @@
     calculation built on it matches nothing and quietly produces no rows.
 - **Checking the data lives in `data quality/`**, its own `CLAUDE.md`. Two
   parts of one notebook, sharing nothing but a file:
-  - **Part 1** scans the raw questionnaires before notebook 1 runs and
-    writes `data_quality_review.txt` (labels the dictionary can't match,
-    Value cells `clean_one_value()` can't parse) for a person to edit and
-    Claude to `apply`, plus one brief, read-only
+  - **Part 1 is the pipeline's first step, and gates it** — see the bullet
+    near the top of this file. It scans the raw questionnaires and
+    `external data\<Chapter>\`, and writes `data_quality_review.txt` (labels
+    the dictionary can't match, Value cells `clean_one_value()` can't parse)
+    for a person to edit and Claude to `apply`, plus one brief, read-only
     `Data quality issues before pipeline execution_<Chapter>.txt` per
-    chapter.
+    chapter — now including a sheet or column notebook 3 would refuse, found
+    the same way notebook 3 finds it, structural-only (external data has no
+    fixed layout to fuzzy-match labels against).
   - **Part 2** reads the finished `<Chapter>_EN.xlsx` files after notebook 4
     and writes `data_gaps_report.xlsx` plus the GitHub Pages dashboard's
     `docs/data.js` — completeness and contradictions across the whole
@@ -161,12 +191,15 @@
   of the job**, not a separate ask. Two kinds, both must close before a run
   counts finished.
 - This is the *during-and-after* loop — gaps found while running notebooks 2
-  and 4, closed by Claude's own judgement.
-  - The data quality notebook is the *before* loop — the same two kinds,
-    found by reading raw questionnaires ahead of a run, closed by a person
-    via `data_quality_review.txt`.
+  and 4, closed by Claude's own judgement, during the **resumed** part of a
+  run, after the quality gate has cleared.
+  - The data quality notebook's Part 1 is the *before* loop, and now the
+    pipeline's literal first step — the same two kinds, found by reading raw
+    questionnaires and `external data\<Chapter>\` ahead of a run, closed by
+    a person via `data_quality_review.txt`, with the run stopped until they
+    do.
   - The two are meant to meet in the middle: the more the before-loop
-    closes, the fewer a real run turns up.
+    closes, the fewer the resumed run turns up.
 
 ### Kind 1 — a value the questionnaires used
 
@@ -199,16 +232,19 @@
 ### The loop, any kind
 
 1. Run the notebook.
-2. Read them from that chapter's own `pipeline_inconsistencies_<Chapter>.txt`
+2. Read them from that chapter's own `need manual intervention_<Chapter>.txt`
    — no spreadsheet is written. Each carries the country, indicator and year
    of an example row.
 3. Translate them yourself. Use the official English name of a statistical
    body where one exists — search `translation dict.xlsx` first, so wording
    stays consistent with what is already there.
-4. Call `update_dictionary(filled)`. It backs the file up first, skips rows
-   already present, and marks what it adds with `status = "updated"` so
-   machine translations can be told from hand-typed ones.
-5. Re-run the notebook and confirm the gap list is empty.
+4. Call `update_dictionary(filled, chapter="<Chapter>")`. It backs the file
+   up first, skips rows already present, marks what it adds with
+   `status = "updated"` so machine translations can be told from hand-typed
+   ones, and logs every row it actually adds to that chapter's own
+   `pipeline_changes_<Chapter>.txt` as `dictionary entry added`.
+5. Re-run the notebook and confirm the gap list in
+   `need manual intervention_<Chapter>.txt` is empty.
 6. Report what you added, and flag any translation involving real judgement.
 
 - **Attach translations by position, never by retyping the Arabic or
@@ -218,7 +254,9 @@
 
 ## Running it
 
-Two ways, and both are fine.
+Two ways, and both are fine. Either way, a full run starts with
+`data quality/Compendium_Data_Quality.ipynb`'s Part 1 and stops there —
+review its findings, apply what needs applying, then resume with notebook 1.
 
 ### Running it yourself, in Jupyter or VS Code
 
@@ -283,10 +321,12 @@ COMPENDIUM-ARAB SOCIETY\
 ├── merged_long_files\          <Chapter>_AR.xlsx, _EN.xlsx, _EN_questionnaires.xlsx, _EN_external.xlsx
 ├── tabulations\                <Chapter>_tabulations_<LANG>.xlsx
 ├── <chapter>_charts\           the SVGs, PNGs, workbook, index and findings
-├── pipeline_inconsistencies_<Chapter>.txt   one per chapter, plus:
-├── pipeline_inconsistencies_general.txt     findings with no chapter of their own
+├── pipeline_changes_<Chapter>.txt            what a resumed run fixed, inferred, or added
+├── pipeline_changes_general.txt              same, with no chapter of its own
+├── need manual intervention_<Chapter>.txt    what a resumed run left alone, and why
+├── need manual intervention_general.txt      same, with no chapter of its own
 ├── data_quality_review.txt     written by data quality/Compendium_Data_Quality.ipynb, Part 1
-├── Data quality issues before pipeline execution_<Chapter>.txt   also Part 1, one per chapter
+├── Data quality issues before pipeline execution_<Chapter>.txt   also Part 1, one per chapter - now covers external data too
 └── codes\                      this repo
 ```
 
@@ -304,6 +344,11 @@ COMPENDIUM-ARAB SOCIETY\
   - `update_dictionary()` (notebook 4, and its own copy in the data quality
     notebook) keeps both kinds; do not reintroduce a `dropna()` across all
     four columns, which silently discards the column-only rows.
+  - Notebook 4's copy takes an optional `chapter=` and, when given, logs
+    every row it actually adds to that chapter's `pipeline_changes_
+    <Chapter>.txt` as `dictionary entry added`. The data quality notebook's
+    own copy does not — its dictionary writes go through `apply_review()`
+    instead, which already reports its own outcome inline.
 - `value corrections.xlsx` has `chapter`, `raw_value`, `corrected_value`,
   plus `status` and `date` the same way.
   - Written only by the data quality notebook's `apply_review()`, read by

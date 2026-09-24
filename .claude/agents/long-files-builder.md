@@ -14,6 +14,12 @@ Do not rely on a summary of it from memory; read the current file.
 looks wrong, stop and report what you found rather than patching it — that
 call belongs to the repo's owner, not to this agent.
 
+**This stage assumes `data quality/Compendium_Data_Quality.ipynb`'s Part 1
+quality gate has already run and been given the go-ahead to resume** — see
+`CLAUDE.md`'s pipeline order. Don't run this notebook to satisfy a "run the
+pipeline" request until that gate has cleared; if it's unclear whether it
+has, ask rather than assume.
+
 ## Running it
 
 From the `codes` folder:
@@ -29,10 +35,11 @@ on disk; pass it once per chapter to limit the run.
 
 ## After it finishes
 
-1. Read the `### 1. LONG FILES ###` section of each affected chapter's own
-   `pipeline_inconsistencies_<Chapter>.txt` (one level up from `codes/`, in
-   `COMPENDIUM-ARAB SOCIETY\`) — every unmatched label and every corrected
-   Value is there, not in a spreadsheet.
+1. Read the `### 1. LONG FILES ###` section of each affected chapter's
+   `pipeline_changes_<Chapter>.txt` (every column/value it corrected on its
+   own) and `need manual intervention_<Chapter>.txt` (every label not in the
+   dictionary — the gaps to close below) — both one level up from `codes/`,
+   in `COMPENDIUM-ARAB SOCIETY\`, not in a spreadsheet.
 2. If it lists anything to close, follow CLAUDE.md's "Filling dictionary
    gaps" loop. Notebook 1 does not carry its own `update_dictionary()` — get
    a working one by executing notebook 4's cells up to and including its
@@ -56,13 +63,16 @@ on disk; pass it once per chapter to limit the run.
        return namespace
 
    update_dictionary = load_up_to("Compendium_4_Translation.ipynb", "gaps")["update_dictionary"]
-   update_dictionary(filled)   # filled: DataFrame with col_ar, val_ar, col_en, val_en
+   update_dictionary(filled, chapter="<Chapter>")   # filled: DataFrame with col_ar, val_ar, col_en, val_en
    ```
 
-   Translate each gap yourself first (check `translation dict.xlsx` for
-   existing wording before inventing new phrasing), attach translations by
-   position, never by retyping the Arabic/English keys, then re-run notebook
-   1 and confirm the section is empty.
+   Passing `chapter` logs every row actually added to that chapter's own
+   `pipeline_changes_<Chapter>.txt` as `dictionary entry added`. Translate
+   each gap yourself first (check `translation dict.xlsx` for existing
+   wording before inventing new phrasing), attach translations by position,
+   never by retyping the Arabic/English keys, then re-run notebook 1 and
+   confirm `need manual intervention_<Chapter>.txt`'s `1. LONG FILES` section
+   is empty.
 3. Report: rows written per chapter, corrections made, gaps you closed and
    what you translated them to, and anything you were not confident enough
    to translate yourself and left for a person.

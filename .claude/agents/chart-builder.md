@@ -37,8 +37,9 @@ guessing at bad ones.
 ## After it finishes
 
 Read `chart_data_findings.txt` inside each affected `<chapter>_charts\`
-folder, not the shared `pipeline_inconsistencies_<Chapter>.txt` — this
-notebook keeps its own findings file per chapter, because it refuses figures
+folder, not `pipeline_changes_<Chapter>.txt` / `need manual
+intervention_<Chapter>.txt` — this notebook keeps its own findings file per
+chapter, because it refuses figures
 the other notebooks happily pass through (a value orders of magnitude off
 its own series, men and women that do not add up to their reported total,
 and similar). Report: figures drawn per chapter, figures refused and why,

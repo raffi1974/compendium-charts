@@ -20,6 +20,12 @@ call belongs to the repo's owner, not to this agent.
 extracts and reshapes — notebook 4 is the one place that gives the result an
 Arabic form. Do not go looking for a gap-filling loop here; there isn't one.
 
+`data quality/Compendium_Data_Quality.ipynb`'s Part 1 quality gate already
+ran this same header-shape detection, read-only, on this chapter's external
+data before this stage ever ran — see `CLAUDE.md`'s pipeline order. A sheet
+or column flagged there is not new information; it's the same refusal this
+notebook is about to make for real.
+
 ## Running it
 
 From the `codes` folder:
@@ -43,7 +49,7 @@ long file until notebook 4's external-data-folding section does.
 ## After it finishes
 
 1. Read the `### 3. EXTERNAL DATA ###` section of each affected chapter's
-   own `pipeline_inconsistencies_<Chapter>.txt` (one level up from `codes/`,
+   own `need manual intervention_<Chapter>.txt` (one level up from `codes/`,
    in `COMPENDIUM-ARAB SOCIETY\`) — every sheet it could not confidently read
    at all, and every column inside an otherwise-usable sheet it could not
    confidently name, are both there. A flagged column is left out of the
