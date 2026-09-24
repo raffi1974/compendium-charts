@@ -379,21 +379,21 @@ COMPENDIUM-ARAB SOCIETY\
     United Arab Emirates' `Poverty_5` (data-table header cell blank instead
     of `index`) are genuine source-file faults — skipped and logged, not
     fixed.
-- **Health has external data only, no questionnaire content.**
-  - Notebook 1 has never run on it — `Health_AR.xlsx`/`_EN.xlsx` exist only
-    from the external-data step, most recently re-run 18 September 2026
-    against an updated source: 6,788 rows, all `Data Origin = External`
-    (disability, health personnel/facility density, obesity, expenditure;
-    22 countries, 2000–2023).
-  - That run used the old, single "3b" external-data-plus-translation
-    notebook (whole-sheet refusal) — sheet `4.10` was skipped entirely,
-    losing 781 otherwise-good figures to one stray, unheaded value.
-  - The current notebook 3 fixes exactly this (leaves out just the bad
-    column) but hasn't been re-run against the real file yet — do that
-    before trusting Health's row count as final.
-  - 28 tabulation sheets/language, from the 13 September run.
-  - A real 1 → 6 run will fold questionnaire rows in alongside the external
-    ones, not replace them.
+- **Health** is current, full pipeline run 24 September 2026 — its first
+  ever run through notebook 1; earlier runs only ever had external data.
+  - 49,598 rows (44,682 from 22 countries' real questionnaires + 4,916
+    external), no calculated rows (no population-size indicator to build
+    a sex ratio or age share from), 49 tabulation sheets/language.
+  - 142 dictionary additions closed in this run: 110 Kind 1 (Arabic →
+    English, almost entirely Source citations — statistical bodies, survey
+    names — never translated before) and 32 Kind 3 (English → Arabic, the
+    external file's indicator names and citations).
+  - 13 of 14 hand-written charts draw (4.1–4.8, 4.10–4.14). 4.9 (disability)
+    is retired — the source data has no disability indicator at all
+    anymore, in either the questionnaires or the external file; its chart
+    code and stale output files were removed 24 September 2026 rather than
+    leaving a chart that can never draw. 4.9 is not reused for anything
+    else, the same way Population leaves 2.6/2.7 as a gap.
 - **Housing** is current, full pipeline run 17 September 2026.
   - 58,689 rows from 22 questionnaires, no calculated rows, 8 tabulation
     sheets/language.

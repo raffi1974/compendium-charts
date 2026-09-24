@@ -251,7 +251,7 @@ Every chart is one of these, in `cell_primitives`:
 | `small_multiples` | 1.8–1.10, 2.5, 4.5, 5.1–5.6, all of 6, 7.4 — a panel per country, **one shared y scale** |
 | `stacked_shares` | 1.3, 1.7, 3.1, 3.2 — percentages that sum to 100 |
 | `ranked_bars` | 1.11, 2.6 — one bar per country, longest on top, no legend |
-| `grouped_bars` | 3.3–3.5, 4.6–4.9, 7.5 — two to five bars per country |
+| `grouped_bars` | 3.3–3.5, 4.6–4.8, 7.5 — two to five bars per country |
 | `pyramid` | the country pyramids — male left, female right, one shared scale |
 
 `grouped_bars` is the newest and the only one that prints no figure on the bar:
